@@ -1,0 +1,23 @@
+/* ───────── 슬롯머신 숫자 (SlotNumber) ───────── */
+.slot {
+  display: inline-block;
+  white-space: nowrap;
+}
+.slot__window {
+  display: inline-block;
+  height: 1.25em;
+  line-height: 1.25em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.slot__strip {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+.slot__digit {
+  display: block;
+  height: 1.25em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

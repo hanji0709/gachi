@@ -1,0 +1,336 @@
+/* ───────── PC ───────── */
+.pc-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  /* 스무스 스크롤 영역 밖 고정 헤더 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+}
+.pc-header__inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 32px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.pc-header__brand {
+  text-decoration: none;
+  display: inline-flex;
+}
+.pc-nav {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.pc-nav__link {
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  padding: 8px 4px;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.pc-nav__link:hover {
+  color: var(--violet-700);
+}
+.pc-nav__link.active {
+  font-weight: 700;
+  color: var(--violet-700);
+  border-bottom-color: var(--violet-700);
+}
+.pc-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* My 메뉴 버튼 (PC: My ▾ · 모바일: My) */
+.my-btn {
+  min-height: 40px;
+  padding: 0 10px 0 14px;
+  border-radius: var(--radius-control);
+  border: none;
+  background: var(--violet-100);
+  color: var(--violet-700);
+  font-weight: 700;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.my-btn:hover {
+  background: var(--violet-700);
+  color: #fff;
+}
+/* My 메뉴 패널 */
+.my-menu {
+  position: relative;
+}
+.my-menu__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-modal);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.my-menu__section {
+  padding: 14px 16px;
+}
+.my-menu__section + .my-menu__section {
+  border-top: 1px solid var(--line);
+}
+.my-menu__members {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.my-menu__members li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.my-menu__code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+.my-menu__code span {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--violet-700);
+}
+.my-menu__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.my-btn--m {
+  height: 40px;
+  padding: 0 12px;
+  margin-left: 2px;
+  border-radius: 12px;
+}
+
+.pc-main {
+  max-width: 1600px;
+  margin: 0 auto;
+  /* 고정 헤더 높이(--header-h)만큼 띄움 */
+  padding: calc(var(--header-h, 65px) + 32px) 32px 64px;
+}
+
+/* 페이지 제목 줄 (제목 + 필터) */
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.page-head__title {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+  color: var(--text);
+}
+.page-head__desc {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+.page-head__tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ───────── 모바일 ───────── */
+.m-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--bg);
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.m-header__title {
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+}
+.m-main {
+  padding: calc(var(--header-h, 64px) + 4px) 16px 112px;
+}
+/* 화면 전환 래퍼(PageTransition) 안에서 카드 사이 간격 유지 */
+.m-main > .page-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 페이지와 함께 나타나는 하단 고정 바 */
+.fixed-bar-enter {
+  animation: fixed-bar-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both;
+}
+@keyframes fixed-bar-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fixed-bar-enter {
+    animation: none;
+  }
+}
+
+/* ───────── 화면 전환 진행 막대 ───────── */
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 60;
+  background: linear-gradient(90deg, var(--violet-700), var(--cyan-500));
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* 모바일 필터 가로 스크롤 줄 */
+.m-filter-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -16px;
+  padding: 0 16px 2px;
+  scrollbar-width: none;
+}
+.m-filter-row::-webkit-scrollbar {
+  display: none;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  height: 84px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  display: flex;
+  padding: 0 4px 20px;
+}
+.bottom-nav__link {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  padding-top: 10px;
+  min-height: 56px;
+  color: var(--text-sub);
+}
+.bottom-nav__label {
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.bottom-nav__link.active {
+  color: var(--violet-700);
+}
+.bottom-nav__link.active .bottom-nav__label {
+  font-weight: 700;
+}
+
+/* ───────── 빠른 입력 시트 ───────── */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(30, 27, 58, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  padding: 10px 16px 28px;
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+.sheet__grip {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line-strong);
+  margin: 0 auto 14px;
+}
+@media (min-width: 768px) {
+  .sheet-backdrop {
+    align-items: center;
+  }
+  .sheet {
+    max-width: 420px;
+    border-radius: 24px;
+    padding-top: 24px;
+  }
+  .sheet__grip {
+    display: none;
+  }
+}
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.keypad__key {
+  min-height: 52px;
+  border: none;
+  border-radius: 12px;
+  background: var(--surface-sub);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+.keypad__key:hover {
+  background: var(--violet-100);
+}

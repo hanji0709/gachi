@@ -1,0 +1,56 @@
+/* 가치성장 디자인 토큰 — 스타일 가이드 1·2·3 기준 */
+:root {
+  /* 중립색 */
+  --bg: #f5f5fb;
+  --surface: #ffffff;
+  --surface-sub: #eeedf8;
+  --line: #e4e2f2;
+  --line-strong: #cfcce6;
+  --text: #1e1b3a;
+  --text-sub: #615e7e;
+  --text-disabled: #a3a1bc;
+
+  /* 브랜드 */
+  --violet-900: #3f30b8;
+  --violet-700: #5b4be0;
+  --violet-500: #8a7cf5;
+  --violet-300: #beb5fa;
+  --violet-100: #eeebfe;
+  --cyan-500: #3cc8dc;
+  --cyan-100: #e2f7fa;
+
+  /* 의미색 */
+  --good: #0a7a40;
+  --good-bg: #e3f7ec;
+  --bad: #c8232f;
+  --bad-bg: #fde8ea;
+  --warn: #a35c00;
+  --warn-bg: #fff4dd;
+  --warn-fill: #ffb020;
+  --info: #5b4be0;
+  --info-bg: #eeebfe;
+
+  /* 소유자 */
+  --owner-joint: #5b4be0;
+  --owner-husband: #2bb7cc;
+  --owner-wife: #ff9f43;
+
+  /* 차트 팔레트 */
+  --chart-1: #5b4be0;
+  --chart-2: #3cc8dc;
+  --chart-3: #a99cf8;
+  --chart-4: #3c4a6b;
+  --chart-5: #7fb2f0;
+  --chart-6: #d58be8;
+  --chart-7: #4f6fe0;
+  --chart-8: #9aa6b8;
+
+  /* 모서리 · 그림자 */
+  --radius-chip: 8px;
+  --radius-control: 14px;
+  --radius-card: 20px;
+  --shadow-card: 0 6px 20px rgba(91, 75, 224, 0.08), 0 1px 3px rgba(30, 27, 58, 0.04);
+  --shadow-modal: 0 16px 40px rgba(30, 27, 58, 0.16);
+
+  --font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}

@@ -1,0 +1,119 @@
+/* 경제적 자유 화면 전용 스타일 */
+
+/* PC 달성 현황 / 미래 예측 탭 (공용 .tabs 위에 크기만 조정) */
+.fire-tabs {
+  gap: 28px;
+  margin-bottom: 24px;
+}
+.fire-tabs .tabs__tab {
+  font-size: 16px;
+  font-weight: 500;
+  min-height: 48px;
+}
+.fire-tabs .tabs__tab[aria-selected='true'] {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* 모바일 알약 탭을 링크로 쓸 때 */
+.fire-mtab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.fire-mtab[aria-selected='true'],
+.fire-mtab[aria-selected='true']:hover {
+  color: var(--violet-700);
+}
+.fire-mtab[aria-selected='false']:hover {
+  color: var(--text-sub);
+}
+
+/* 우리 집 목표 */
+.fire-goal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.fire-goal__title {
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.fire-goal__edit {
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 32px;
+  padding: 0 6px;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--violet-700);
+  border: none;
+}
+.fire-goal__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+.fire-goal__k {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.fire-goal__v {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+/* 차트 범례 */
+.fire-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.fire-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 가정 입력 행 */
+.fire-assume__group {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--violet-700);
+}
+.fire-assume__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+.fire-assume__row label {
+  font-size: 14px;
+}
+.fire-assume__input {
+  width: 110px;
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  padding: 0 10px;
+  text-align: right;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+}
+.fire-assume__unit {
+  font-size: 13px;
+  color: var(--text-sub);
+  width: 24px;
+}

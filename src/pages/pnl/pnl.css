@@ -1,0 +1,46 @@
+/* 펼침 화살표: ▸(닫힘) → 90° 회전해 ▾(열림) */
+.flow-chevron {
+  display: inline-block;
+  text-align: center;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.flow-chevron.is-open {
+  transform: rotate(90deg);
+}
+
+/* 모바일 노드 버튼 */
+.flow-node-btn {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.flow-node-btn:hover {
+  background: var(--surface-sub) !important;
+}
+
+/* PC SVG 마인드맵의 펼치기 버튼(고정지출 노드) */
+.flow-toggle {
+  cursor: pointer;
+  outline: none;
+}
+.flow-toggle .flow-toggle__box {
+  transition: fill 0.15s;
+}
+.flow-toggle:hover .flow-toggle__box {
+  fill: var(--surface-sub);
+}
+.flow-toggle__ring {
+  opacity: 0;
+}
+.flow-toggle:focus-visible .flow-toggle__ring {
+  opacity: 1;
+}
+.flow-toggle .flow-chevron {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-chevron {
+    transition: none;
+  }
+}

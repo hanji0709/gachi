@@ -1,0 +1,139 @@
+/* ───────── 첫 진입 스플래시 ─────────
+ * 시간표 (Splash.tsx의 INTRO_MS와 맞춤)
+ *   0.2s ~ 1.6s  아래 → 위로 색 채우기
+ *   0.9s ~ 1.5s  워드마크 나타남
+ *   1.6s ~ 2.3s  이파리 반짝임 + 로고가 잠깐 환해짐
+ */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--violet-700);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  transition:
+    opacity 0.5s ease,
+    visibility 0.5s;
+}
+.splash.is-exit {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splash__mark {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.splash.is-exit .splash__mark {
+  transform: scale(1.08);
+}
+
+.splash__shadow,
+.splash__fill,
+.splash__fill svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 그림자: 배경보다 한 단계 진한 보라 실루엣 */
+.splash__shadow path {
+  fill: var(--violet-900);
+}
+
+/* 컬러 로고: 위쪽을 100% 잘라 둔 상태에서 0%까지 → 아래부터 위로 차오름 */
+.splash__fill {
+  clip-path: inset(100% 0 0 0);
+  animation:
+    splash-fill 1.4s cubic-bezier(0.65, 0, 0.35, 1) 0.2s forwards,
+    splash-glow 0.7s ease-out 1.6s;
+}
+@keyframes splash-fill {
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+/* 다 차는 순간 잠깐 환해짐 */
+@keyframes splash-glow {
+  40% {
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.75));
+  }
+}
+
+/* 반짝임: 오른쪽 이파리 끝 근처 (64 기준 좌표 49,14) */
+.splash__spark {
+  position: absolute;
+  left: calc(49 / 64 * 100% - 15px);
+  top: calc(14 / 64 * 100% - 15px);
+  width: 30px;
+  height: 30px;
+  opacity: 0;
+  transform: scale(0) rotate(-45deg);
+  filter: drop-shadow(0 0 6px #fff);
+  animation: splash-spark 0.7s ease-out 1.6s forwards;
+}
+.splash__spark--small {
+  left: calc(40 / 64 * 100% - 8px);
+  top: calc(24 / 64 * 100% - 8px);
+  width: 16px;
+  height: 16px;
+  animation-delay: 1.75s;
+}
+@keyframes splash-spark {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-45deg);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.15) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.6) rotate(20deg);
+  }
+}
+
+.splash__word {
+  color: #fff;
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  opacity: 0;
+  animation: splash-word 0.6s ease-out 0.9s forwards;
+}
+@keyframes splash-word {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 동작 줄이기: 완성된 로고만 잠깐 */
+.splash.is-reduced .splash__fill {
+  clip-path: none;
+  animation: none;
+}
+.splash.is-reduced .splash__spark {
+  display: none;
+}
+.splash.is-reduced .splash__word {
+  opacity: 1;
+  animation: none;
+}
+.splash.is-reduced,
+.splash.is-reduced .splash__mark {
+  transition-duration: 0.2s;
+}
