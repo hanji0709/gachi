@@ -50,7 +50,7 @@ export function PcBalance({ view }: { view: BalanceView }) {
   return (
     <>
       <PageHead
-        title="재무상태표"
+        title="대시보드(재무상태표)"
         desc={`${view.basisLabel} · ${view.ownerLabel}`}
         tools={
           <>

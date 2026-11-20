@@ -334,3 +334,69 @@
 .keypad__key:hover {
   background: var(--violet-100);
 }
+
+/* ───────── 첫 로그인 안내 말풍선 (My 버튼 아래) ───────── */
+.invite-tip {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  z-index: 45;
+  width: min(300px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--violet-700);
+  color: #fff;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.28),
+    0 16px 40px rgba(46, 33, 140, 0.35);
+  text-align: left;
+  animation: invite-tip-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both;
+}
+/* My 버튼을 가리키는 꼬리 */
+.invite-tip::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 22px;
+  width: 14px;
+  height: 14px;
+  background: var(--violet-700);
+  transform: rotate(45deg);
+  border-radius: 3px;
+}
+.invite-tip__title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.invite-tip__body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
+}
+.invite-tip__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.invite-tip__actions .btn--secondary {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-color: transparent;
+}
+.invite-tip__actions .btn--primary {
+  background: #fff;
+  color: var(--violet-700);
+}
+@keyframes invite-tip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .invite-tip {
+    animation: none;
+  }
+}

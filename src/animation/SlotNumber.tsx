@@ -45,6 +45,9 @@ function travelRows(digit: number, duration: number): number {
   return Math.min(cycles * 10 + digit, ROWS - 1)
 }
 
+/** 첫 재생 뒤 값이 바뀔 때(원/달러 전환·기준월 변경 등) 짧게 다시 굴리는 시간(초) */
+export const SLOT_CHANGE_DURATION = 0.9
+
 /** "사이트 접속 시" 1회만 재생: 한 번 끝까지 재생되면 이후 방문에선 최종 숫자로 바로 표시 */
 let playedThisLoad = false
 
@@ -54,6 +57,8 @@ let playedThisLoad = false
  */
 export function SlotNumber({ value, duration = SLOT_DURATION, stagger = 0.1, from = 'left', delay = SLOT_DELAY }: SlotNumberProps) {
   const ref = useRef<HTMLSpanElement>(null)
+  /** 이 숫자가 화면에 한 번 그려졌는지 (그 뒤 값이 바뀌면 짧은 전환) */
+  const mounted = useRef(false)
 
   useGSAP(
     () => {
@@ -67,10 +72,29 @@ export function SlotNumber({ value, duration = SLOT_DURATION, stagger = 0.1, fro
         return { strip, d, rows: travelRows(Number(strip.dataset.digit), d) }
       })
 
-      if (playedThisLoad || prefersReducedMotion()) {
+      if (prefersReducedMotion()) {
         plan.forEach(({ strip, rows }) => gsap.set(strip, { yPercent: yPercentAt(rows) }))
         return
       }
+      // 이미 한 번 재생한 뒤: 화면에 처음 그려질 때는 바로 최종 숫자,
+      // 그 자리에서 값이 바뀌면 짧게(0.9초) 다시 굴려 부드럽게 전환
+      if (playedThisLoad) {
+        if (!mounted.current) {
+          mounted.current = true
+          plan.forEach(({ strip, rows }) => gsap.set(strip, { yPercent: yPercentAt(rows) }))
+          return
+        }
+        const quick = n > 1 ? Math.min(0.04, (SLOT_CHANGE_DURATION * 0.4) / (n - 1)) : 0
+        strips.forEach((strip, i) => {
+          const order = from === 'left' ? i : n - 1 - i
+          const d = SLOT_CHANGE_DURATION - (n - 1 - order) * quick
+          const digit = Number(strip.dataset.digit)
+          // 0부터 새 숫자까지(0이면 한 바퀴) 굴림. 짧은 시간이라 칸 수를 적게 해 최고 속도 제한 안에 둠
+          gsap.fromTo(strip, { yPercent: 0 }, { yPercent: yPercentAt(digit === 0 ? 10 : digit), duration: d, ease: 'sine.out' })
+        })
+        return
+      }
+      mounted.current = true
 
       const tl = gsap.timeline({ delay, onComplete: () => (playedThisLoad = true) })
       plan.forEach(({ strip, d, rows }) => {

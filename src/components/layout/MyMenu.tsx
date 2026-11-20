@@ -59,6 +59,47 @@ export function MyMenu({ mobile }: { mobile?: boolean }) {
 
   const waitingForSpouse = members.length < 2
 
+  /**
+   * 처음 로그인했을 때 한 번: My 버튼 아래 말풍선으로 초대 코드 공유 안내.
+   * 배우자가 이미 참여한 가구는 공유할 필요가 없으므로 띄우지 않음. 본 사람은 이 브라우저에 기록.
+   */
+  const tipKey = user ? `gachi:invite-tip-seen:${user.id}` : null
+  const [tip, setTip] = useState(false)
+  useEffect(() => {
+    if (!tipKey || !household || !waitingForSpouse) return
+    let seen = false
+    try {
+      seen = localStorage.getItem(tipKey) === '1'
+    } catch {
+      // 저장소를 못 쓰면 이번만 보여 줌
+    }
+    if (!seen) setTip(true)
+  }, [tipKey, household, waitingForSpouse])
+  const closeTip = () => {
+    setTip(false)
+    try {
+      if (tipKey) localStorage.setItem(tipKey, '1')
+    } catch {
+      // 무시
+    }
+  }
+  const tipOpen = tip && !open
+  // 팝업이 떠 있을 때 Esc·바깥 클릭으로 닫기
+  useEffect(() => {
+    if (!tipOpen) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeTip()
+    const onDown = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) closeTip()
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onDown)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onDown)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipOpen])
+
   return (
     <div className="my-menu" ref={wrapRef}>
       <button
@@ -68,11 +109,37 @@ export function MyMenu({ mobile }: { mobile?: boolean }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (tip) closeTip()
+          setOpen((v) => !v)
+        }}
       >
         My
         {!mobile && <Icon name="chevronDown" size={16} strokeWidth={2} />}
       </button>
+      {tipOpen && (
+        <div role="dialog" aria-labelledby={`${menuId}-tip`} className="invite-tip">
+          <p id={`${menuId}-tip`} className="invite-tip__title">
+            배우자를 초대해 보세요
+          </p>
+          <p className="invite-tip__body">우측 상단 My 메뉴에서 코드를 복사해 배우자에게 공유하세요.</p>
+          <div className="invite-tip__actions">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                closeTip()
+                setOpen(true)
+              }}
+            >
+              My 메뉴 열기
+            </Button>
+            <Button size="sm" autoFocus onClick={closeTip}>
+              확인
+            </Button>
+          </div>
+        </div>
+      )}
       {open && (
         <div id={menuId} role="menu" aria-label="My 메뉴" className="my-menu__panel">
           <div className="my-menu__section">
