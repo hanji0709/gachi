@@ -614,6 +614,23 @@
   -webkit-mask-image: conic-gradient(#000 calc(var(--p) * 1turn), transparent 0);
   mask-image: conic-gradient(#000 calc(var(--p) * 1turn), transparent 0);
 }
+/* 상세 팝업이 붙은 도넛: 선택하지 않은 조각을 흐리게 */
+.donut--hover {
+  cursor: pointer;
+  outline: none;
+  touch-action: pan-y;
+}
+.donut--hover:focus-visible {
+  outline: 2px solid var(--violet-700);
+  outline-offset: 4px;
+}
+.donut__dim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: chart-tip-in 0.16s ease-out;
+}
 .donut__hole {
   position: relative;
   border-radius: 50%;

@@ -80,7 +80,10 @@ export function useBalanceView(model: BalanceSheetModel) {
     const firstMonth = period === '1년' ? addMonths(month ?? '', -11) : period === '3년' ? addMonths(month ?? '', -35) : '0000-00'
     const trend = model.settlements
       .filter((s) => month && s.month <= month && s.month >= firstMonth)
-      .map((s) => ({ month: s.month, value: computeSheet(model.accounts, model.valuesOf(s.month).balances, opt).netWorth }))
+      .map((s) => {
+        const t = computeSheet(model.accounts, model.valuesOf(s.month).balances, opt)
+        return { month: s.month, value: t.netWorth, assets: t.totalAssets, debts: t.totalDebt }
+      })
 
     const fixedExpense = summarizePnl(model.items, cur.entries).fixed
 

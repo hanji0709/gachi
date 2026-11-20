@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react'
-import { formatShort, splitMonth } from '../../data/format'
+import { ChartHover, TipRow, TipTitle } from '../../components/ui'
+import { formatShort, formatWon, splitMonth } from '../../data/format'
 
 /**
  * 순자산 추이 선 그래프 — 결산월별 순자산으로 축·좌표를 계산 (디자인 시안의 크기·색 기준)
@@ -9,7 +10,14 @@ import { formatShort, splitMonth } from '../../data/format'
 export interface TrendPoint {
   month: string // "2026-10"
   value: number
+  /** 그 달 총자산·총부채 (상세 팝업용) */
+  assets?: number
+  debts?: number
 }
+
+/** 팝업 금액 표시 (통화 반영). 없으면 원 단위 */
+type Fmt = (won: number) => string
+const defaultFmt: Fmt = (won) => `${formatWon(won)}원`
 
 interface Layout {
   w: number
@@ -49,7 +57,7 @@ function RevealGroup({ x, width, height, children }: { x: number; width: number;
   )
 }
 
-function Trend({ points, layout: L }: { points: TrendPoint[]; layout: Layout }) {
+function Trend({ points, layout: L, fmt = defaultFmt }: { points: TrendPoint[]; layout: Layout; fmt?: Fmt }) {
   if (points.length === 0) {
     return (
       <p className="caption" style={{ padding: '32px 0', textAlign: 'center' }}>
@@ -74,7 +82,43 @@ function Trend({ points, layout: L }: { points: TrendPoint[]; layout: Layout }) 
   const labelIdx = points.map((_, i) => i).filter((i) => (last - i) % step === 0)
 
   return (
-    <svg viewBox={`0 0 ${L.w} ${L.h}`} width="100%" role="img" aria-label={`순자산 추이 그래프, ${points[0].month}부터 ${points[last].month}까지`} data-chart-reveal="line" style={{ display: 'block' }}>
+    <ChartHover
+      width={L.w}
+      height={L.h}
+      plotTop={L.top}
+      plotBottom={L.bottom}
+      label={`순자산 추이 그래프, ${points[0].month}부터 ${points[last].month}까지`}
+      svgProps={{ 'data-chart-reveal': 'line' }}
+      points={points.map((p, i) => ({ x: xOf(i), y: yOf(p.value) }))}
+      renderMarker={(i) => <circle cx={xOf(i)} cy={yOf(points[i].value)} r={6} stroke="#FFFFFF" strokeWidth={2.5} style={{ fill: 'var(--violet-700)' }} />}
+      renderTooltip={(i) => {
+        const p = points[i]
+        const { year, month } = splitMonth(p.month)
+        const change = i > 0 ? p.value - points[i - 1].value : null
+        return (
+          <>
+            <TipTitle>
+              {year}년 {month}월 결산
+            </TipTitle>
+            <TipRow color="var(--violet-700)" line label="순자산" value={fmt(p.value)} />
+            {p.assets !== undefined && <TipRow label="총자산" value={fmt(p.assets)} />}
+            {p.debts !== undefined && <TipRow label="총부채" value={fmt(p.debts)} />}
+            {change !== null && (
+              <TipRow
+                strong
+                label="전월 대비"
+                value={
+                  <span style={{ color: change > 0 ? 'var(--good)' : change < 0 ? 'var(--bad)' : undefined }}>
+                    {change > 0 ? '▲ +' : change < 0 ? '▼ −' : ''}
+                    {fmt(Math.abs(change))}
+                  </span>
+                }
+              />
+            )}
+          </>
+        )
+      }}
+    >
       {ticks.map((v) => (
         <g key={v}>
           <line x1={L.left} x2={L.right} y1={yOf(v)} y2={yOf(v)} style={{ stroke: 'var(--line)' }} />
@@ -101,9 +145,9 @@ function Trend({ points, layout: L }: { points: TrendPoint[]; layout: Layout }) 
           {L.label(points[i].month)}
         </text>
       ))}
-    </svg>
+    </ChartHover>
   )
 }
 
-export const NetWorthTrendPc = ({ points }: { points: TrendPoint[] }) => <Trend points={points} layout={PC} />
-export const NetWorthTrendM = ({ points }: { points: TrendPoint[] }) => <Trend points={points} layout={M} />
+export const NetWorthTrendPc = ({ points, fmt }: { points: TrendPoint[]; fmt?: Fmt }) => <Trend points={points} layout={PC} fmt={fmt} />
+export const NetWorthTrendM = ({ points, fmt }: { points: TrendPoint[]; fmt?: Fmt }) => <Trend points={points} layout={M} fmt={fmt} />

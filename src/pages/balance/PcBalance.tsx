@@ -17,6 +17,8 @@ import {
   StatCard,
   SubBox,
   Switch,
+  TipRow,
+  TipTitle,
 } from '../../components/ui'
 import { formatNumber, formatPct } from '../../data/format'
 import type { AccountOwner } from '../../data/ledger'
@@ -189,7 +191,20 @@ export function PcBalance({ view }: { view: BalanceView }) {
           <div style={{ display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap' }}>
             {/* 도넛: 남는 폭 안에서 가운데 정렬 */}
             <div style={{ flex: '1 1 260px', display: 'flex', justifyContent: 'center' }}>
-              <Donut animate segments={view.sectors.map((s) => ({ pct: s.share * 100, color: s.color }))} size={220} hole={132}>
+              <Donut
+                animate
+                label="금융투자 섹터 비중 도넛 차트"
+                segments={view.sectors.map((s) => ({ pct: s.share * 100, color: s.color }))}
+                tips={view.sectors.map((s) => (
+                  <>
+                    <TipTitle>{s.sector}</TipTitle>
+                    <TipRow color={s.color} label="금액" value={view.moneyText(s.amount)} />
+                    <TipRow label="비중" value={formatPct(s.share, 1)} />
+                  </>
+                ))}
+                size={220}
+                hole={132}
+              >
                 <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>{view.sectors.filter((s) => s.amount > 0).length}개 섹터</span>
                 <span style={{ fontSize: 18, fontWeight: 700 }}>{view.short(view.sectorTotal)}</span>
               </Donut>
@@ -220,7 +235,7 @@ export function PcBalance({ view }: { view: BalanceView }) {
           title="순자산 추이"
           right={<Segmented label="기간" options={['1년', '3년', '전체']} size="sm" value={view.period} onChange={(v) => view.setPeriod(v as Period)} />}
         />
-        <NetWorthTrendPc points={view.trend} />
+        <NetWorthTrendPc points={view.trend} fmt={view.moneyText} />
       </Card>
     </>
   )

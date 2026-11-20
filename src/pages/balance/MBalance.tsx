@@ -15,6 +15,8 @@ import {
   StatCard,
   SubBox,
   Switch,
+  TipRow,
+  TipTitle,
 } from '../../components/ui'
 import { formatPct } from '../../data/format'
 import { NetWorthTrendM } from './NetWorthTrend'
@@ -104,7 +106,20 @@ export function MBalance({ view }: { view: BalanceView }) {
         ) : (
           <>
             <div style={{ display: 'flex', gap: 28, alignItems: 'center', justifyContent: 'center', padding: '4px 8px' }}>
-              <Donut animate segments={view.sectors.map((s) => ({ pct: s.share * 100, color: s.color }))} size={128} hole={74}>
+              <Donut
+                animate
+                label="금융투자 섹터 비중 도넛 차트"
+                segments={view.sectors.map((s) => ({ pct: s.share * 100, color: s.color }))}
+                tips={view.sectors.map((s) => (
+                  <>
+                    <TipTitle>{s.sector}</TipTitle>
+                    <TipRow color={s.color} label="금액" value={view.moneyText(s.amount)} />
+                    <TipRow label="비중" value={formatPct(s.share, 1)} />
+                  </>
+                ))}
+                size={128}
+                hole={74}
+              >
                 <b style={{ fontSize: 14 }}>{view.short(view.sectorTotal)}</b>
               </Donut>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7, width: 132, flexShrink: 0 }}>
@@ -134,7 +149,7 @@ export function MBalance({ view }: { view: BalanceView }) {
       {/* 순자산 추이 */}
       <Card pad="md">
         <CardHeader variant="m" title="순자산 추이" right={<span className="micro">최근 1년</span>} />
-        <NetWorthTrendM points={view.trend} />
+        <NetWorthTrendM points={view.trend} fmt={view.moneyText} />
       </Card>
     </>
   )
