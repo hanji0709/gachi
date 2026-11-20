@@ -22,6 +22,8 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
   const [owner, setOwner] = useState<AccountOwner>('joint')
   const [rate, setRate] = useState('')
   const [busy, setBusy] = useState(false)
+  /** 이름 없이 추가를 누르면 안내 (버튼은 항상 눌리게 두고, 누른 뒤에 무엇이 빠졌는지 알려 줌) */
+  const [nameMissing, setNameMissing] = useState(false)
   const rateValue = rate.trim() === '' ? null : parseRate(rate)
   const rateInvalid = kind === 'liability' && rate.trim() !== '' && rateValue === null
   // PC는 탭이 바뀌면 종류도 따라감
@@ -31,7 +33,15 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || rateInvalid) return
+    if (!name.trim()) {
+      setNameMissing(true)
+      document.getElementById('acc-name')?.focus()
+      return
+    }
+    if (rateInvalid) {
+      document.getElementById('acc-rate')?.focus()
+      return
+    }
     setBusy(true)
     await onAdd({
       kind: effectiveKind,
@@ -49,7 +59,11 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
         id="acc-name"
         label={effectiveKind === 'asset' ? '자산 이름' : '부채 이름'}
         value={name}
-        onChange={setName}
+        onChange={(v) => {
+          setName(v)
+          if (v.trim()) setNameMissing(false)
+        }}
+        error={nameMissing ? `${effectiveKind === 'asset' ? '자산' : '부채'} 이름을 입력해 주세요` : undefined}
         maxLength={40}
         placeholder={effectiveKind === 'asset' ? '예: 생활비 통장' : '예: 주택담보대출'}
         required
@@ -73,6 +87,7 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
     return (
       <form
         onSubmit={submit}
+        noValidate
         style={{
           display: 'grid',
           gridTemplateColumns: effectiveKind === 'liability' ? '2fr 1.4fr 1fr 1fr auto' : '2fr 1.4fr 1fr auto',
@@ -85,7 +100,7 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
         }}
       >
         {fields}
-        <Button type="submit" disabled={busy || !name.trim() || rateInvalid}>
+        <Button type="submit" disabled={busy}>
           {busy ? '추가 중…' : '추가'}
         </Button>
       </form>
@@ -95,6 +110,7 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
   return (
     <form
       onSubmit={submit}
+      noValidate
       style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 14, margin: '8px 0 12px', borderRadius: 14, background: 'var(--surface-sub)' }}
     >
       <Segmented
@@ -116,7 +132,7 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
             취소
           </Button>
         )}
-        <Button type="submit" block disabled={busy || !name.trim() || rateInvalid}>
+        <Button type="submit" block disabled={busy}>
           {busy ? '추가 중…' : '추가'}
         </Button>
       </div>

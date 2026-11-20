@@ -2,6 +2,7 @@
  * 시간표 (Splash.tsx의 INTRO_MS와 맞춤)
  *   0.2s ~ 1.6s  아래 → 위로 색 채우기
  *   0.9s ~ 1.5s  워드마크 나타남
+ *   1.1s ~ 1.7s  소개 문구 나타남
  *   1.6s ~ 2.3s  이파리 반짝임 + 로고가 잠깐 환해짐
  */
 .splash {
@@ -121,6 +122,20 @@
   }
 }
 
+/* 소개 문구: 워드마크 바로 아래, 살짝 늦게 */
+.splash__tagline {
+  margin: -8px 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  text-align: center;
+  padding: 0 24px;
+  opacity: 0;
+  animation: splash-word 0.6s ease-out 1.1s forwards;
+}
+
 /* 동작 줄이기: 완성된 로고만 잠깐 */
 .splash.is-reduced .splash__fill {
   clip-path: none;
@@ -129,7 +144,8 @@
 .splash.is-reduced .splash__spark {
   display: none;
 }
-.splash.is-reduced .splash__word {
+.splash.is-reduced .splash__word,
+.splash.is-reduced .splash__tagline {
   opacity: 1;
   animation: none;
 }

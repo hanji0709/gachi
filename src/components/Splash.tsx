@@ -92,6 +92,7 @@ export function Splash() {
       <div className="splash__word" aria-hidden="true">
         가치성장
       </div>
+      <p className="splash__tagline">부부가 함께 쓰는 자산관리 플랫폼</p>
     </div>
   )
 }
