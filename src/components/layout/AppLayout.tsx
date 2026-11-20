@@ -7,6 +7,7 @@ import { NAV_ITEMS, findNavItem } from '../../navigation'
 import { Button, Icon, IconButton, Logo } from '../ui'
 import { MyMenu } from './MyMenu'
 import { QuickInputProvider, useQuickInput } from './QuickInput'
+import { SoloNotice } from './SoloNotice'
 import './layout.css'
 
 export function AppLayout() {
@@ -64,6 +65,7 @@ function PcShell() {
           <PageTransition />
         </main>
       </SmoothScroll>
+      <SoloNotice />
     </>
   )
 }
@@ -87,6 +89,7 @@ function MobileShell() {
           <PageTransition />
         </main>
       </SmoothScroll>
+      <SoloNotice />
       <nav aria-label="메인 메뉴" className="bottom-nav">
         {NAV_ITEMS.map((n) => (
           <NavLink key={n.path} to={n.path} className="bottom-nav__link">

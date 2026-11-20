@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import { useState, type ReactNode } from 'react'
+import { useCssHeight } from '../../components/layout/SoloNotice'
 import { Collapse } from '../../animation/Collapse'
 import { FixedLayer } from '../../animation/SmoothScroll'
 import { useAuth } from '../../auth/AuthProvider'
@@ -374,10 +376,14 @@ export function MSettle({ model, month, thisMonth, onMonthChange }: Props) {
 function MConfirmBar({ model }: { model: SettlementModel }) {
   const { members, me } = useAuth()
   const rule = closeRule(model, members, me)
+  const barRef = useRef<HTMLDivElement>(null)
+  // 하단 상시 안내(SoloNotice)가 이 바 위에 뜨도록 높이를 알려 줌
+  useCssHeight(barRef, '--fixed-bar-h')
   // 스무스 스크롤 영역 밖(body)에 고정으로 렌더
   return (
     <FixedLayer>
       <div
+        ref={barRef}
         className="fixed-bar-enter"
         style={{ position: 'fixed', left: 0, right: 0, bottom: 84, zIndex: 15, padding: '12px 16px', background: 'linear-gradient(rgba(245,245,251,0), var(--bg) 30%)' }}
       >

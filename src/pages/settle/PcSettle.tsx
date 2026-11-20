@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties } from 'react'
+import { useCssHeight } from '../../components/layout/SoloNotice'
 import { FixedLayer } from '../../animation/SmoothScroll'
 import { useSmoothPin } from '../../animation/useSmoothPin'
 import { useAuth } from '../../auth/AuthProvider'
@@ -492,9 +493,13 @@ function SummaryCard({ model, month }: { model: SettlementModel; month: string }
 function ConfirmBar({ model }: { model: SettlementModel }) {
   const { members, me } = useAuth()
   const rule = closeRule(model, members, me)
+  const barRef = useRef<HTMLDivElement>(null)
+  // 하단 상시 안내(SoloNotice)가 이 바 위에 뜨도록 높이를 알려 줌
+  useCssHeight(barRef, '--fixed-bar-h')
   return (
     <FixedLayer>
       <div
+        ref={barRef}
         className="fixed-bar-enter"
         style={{
           position: 'fixed',
