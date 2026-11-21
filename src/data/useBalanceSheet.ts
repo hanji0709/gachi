@@ -20,6 +20,8 @@ interface Loaded {
   items: PnlItem[]
   /** 잔액이 하나라도 입력된 결산월만, 오래된 순 */
   settlements: Settlement[]
+  /** 손익이 하나라도 입력된 결산월, 오래된 순 */
+  pnlSettlements: Settlement[]
   values: Map<string, MonthValues>
 }
 
@@ -43,7 +45,8 @@ export function useBalanceSheet() {
       ])
       const values = await fetchValues(all.map((s) => s.id))
       const settlements = all.filter((s) => (values.get(s.id)?.balances.size ?? 0) > 0)
-      setData({ accounts, items, settlements, values })
+      const pnlSettlements = all.filter((s) => (values.get(s.id)?.entries.size ?? 0) > 0)
+      setData({ accounts, items, settlements, pnlSettlements, values })
       setError(null)
     } catch (e) {
       setError(toKoreanError(e))
@@ -73,6 +76,11 @@ export function useBalanceSheet() {
     return (s && data?.values.get(s.id)) || emptyValues()
   }
   const settlementOf = (month: string | null) => data?.settlements.find((x) => x.month === month) ?? null
+  /** 손익용: 잔액 입력 여부와 관계없이 그 달 값 */
+  const pnlValuesOf = (month: string): MonthValues => {
+    const s = data?.pnlSettlements.find((x) => x.month === month)
+    return (s && data?.values.get(s.id)) || emptyValues()
+  }
 
   return {
     loading: !data && !error,
@@ -81,6 +89,8 @@ export function useBalanceSheet() {
     accounts: data?.accounts ?? [],
     items: data?.items ?? [],
     settlements: data?.settlements ?? [],
+    pnlSettlements: data?.pnlSettlements ?? [],
+    pnlValuesOf,
     defaultMonth,
     valuesOf,
     settlementOf,
