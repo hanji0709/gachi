@@ -164,32 +164,6 @@ export function useSettlement(month: string) {
       await updateSettlement(id, { fx_rate: rate })
     })
 
-  /** 지난달 값 불러오기: 이번 달에 비어 있는 칸만 지난달 값으로 채움 */
-  const copyPrevious = () => {
-    if (!data) return Promise.resolve()
-    const balances = data.accounts.filter((a) => !data.cur.balances.has(a.id) && data.prev.balances.has(a.id))
-    const entries = data.items.filter((i) => !data.cur.entries.has(i.id) && data.prev.entries.has(i.id))
-    const sectors = [...data.prev.sectors.entries()].filter(([k]) => !data.cur.sectors.has(k))
-    patchCur((v) => {
-      balances.forEach((a) => v.balances.set(a.id, data.prev.balances.get(a.id)!))
-      entries.forEach((i) => v.entries.set(i.id, data.prev.entries.get(i.id)!))
-      sectors.forEach(([k, n]) => v.sectors.set(k, n))
-    })
-    return run(async () => {
-      const id = await settlementId()
-      await Promise.all([
-        upsertBalances(id, balances.map((a) => ({ accountId: a.id, amount: data.prev.balances.get(a.id)! }))),
-        upsertEntries(id, entries.map((i) => ({ itemId: i.id, amount: data.prev.entries.get(i.id)! }))),
-        upsertSectors(id, sectors.map(([sector, amount]) => ({ sector, amount }))),
-      ])
-    })
-  }
-  const copyableCount = data
-    ? data.accounts.filter((a) => !data.cur.balances.has(a.id) && data.prev.balances.has(a.id)).length +
-      data.items.filter((i) => !data.cur.entries.has(i.id) && data.prev.entries.has(i.id)).length +
-      [...data.prev.sectors.keys()].filter((k) => !data.cur.sectors.has(k)).length
-    : 0
-
   const addAccount = (a: NewAccount) =>
     run(async () => {
       const created = await createAccount(householdId, a, (data?.accounts.length ?? 0) + 1)
@@ -267,8 +241,6 @@ export function useSettlement(month: string) {
     setEntry,
     setSector,
     setFx,
-    copyPrevious,
-    copyableCount,
     addAccount,
     removeAccount,
     setBudget,

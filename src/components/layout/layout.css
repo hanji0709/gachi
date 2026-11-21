@@ -463,3 +463,63 @@
     animation: none;
   }
 }
+
+/* ───────── 완료 알림 토스트 (엑셀 업로드 등) ─────────
+ * 하단 확인 바(--fixed-bar-h)·상시 안내(--solo-h) 위에 뜨고 몇 초 뒤 사라짐 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--fixed-bar-h, 0px) + var(--solo-h, 0px) + 28px);
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: var(--text);
+  color: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  box-shadow: var(--shadow-modal);
+  animation: toast-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.toast span {
+  word-break: keep-all;
+}
+.toast small {
+  display: block;
+  font-weight: 400;
+  opacity: 0.8;
+  font-size: 12px;
+}
+.toast--out {
+  animation: toast-out 0.3s ease-in both;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+@media (max-width: 767px) {
+  /* 하단 탭(84px)·확인 바 위 */
+  .toast {
+    bottom: calc(84px + var(--fixed-bar-h, 0px) + var(--solo-h, 0px) + 12px);
+    width: calc(100vw - 32px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast--out {
+    animation: none;
+  }
+}

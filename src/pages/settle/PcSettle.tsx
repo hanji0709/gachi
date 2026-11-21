@@ -5,12 +5,13 @@ import { useSmoothPin } from '../../animation/useSmoothPin'
 import { useAuth } from '../../auth/AuthProvider'
 import { PageHead } from '../../components/layout/PageHead'
 import { Badge, Button, Card, CardHeader, Icon, IconButton, Money, OwnerTag, ProgressBar, SubBox } from '../../components/ui'
-import { budgetLines, diffTone, groupTotal, sectorTotal, summarizePnl } from '../../data/compute'
+import { diffTone, groupTotal, sectorTotal, summarizePnl } from '../../data/compute'
 import { formatNumber, formatPct, formatWon, splitMonth } from '../../data/format'
-import { OWNER_LABEL, SECTORS, type AccountKind, type PnlGroup } from '../../data/ledger'
+import { SECTORS, type AccountKind, type PnlGroup } from '../../data/ledger'
 import type { SettlementModel } from '../../data/useSettlement'
 import { AddAccountForm } from './AddAccountForm'
-import { AmountInput, CopyIcon, DIFF_COLOR, SaveStatus } from './parts'
+import { ExcelUpload } from './ExcelUpload'
+import { AmountInput, DIFF_COLOR, SaveStatus } from './parts'
 import { closeRule, MONTH_BADGE, monthStatusOf, PNL_GROUP_TITLE, SECTOR_COLOR } from './shared'
 
 interface Props {
@@ -39,24 +40,7 @@ export function PcSettle({ model, month, thisMonth, onMonthChange }: Props) {
             ? '마감됨 · 수정하려면 아래에서 마감을 해제해 주세요'
             : '진행 중 · 손익·자산·섹터를 입력하고 두 사람이 확인하면 마감합니다'
         }
-        tools={
-          <>
-            <Button variant="secondary" size="header" icon="upload" style={{ padding: '0 14px' }} disabled title="엑셀 업로드는 곧 지원할 예정이에요">
-              엑셀 업로드
-            </Button>
-            <Button
-              variant="secondary"
-              size="header"
-              style={{ padding: '0 14px' }}
-              disabled={model.locked || model.copyableCount === 0}
-              title={model.copyableCount === 0 ? '채울 수 있는 지난달 값이 없어요' : `비어 있는 ${model.copyableCount}칸을 지난달 값으로 채워요`}
-              onClick={() => void model.copyPrevious()}
-            >
-              <CopyIcon />
-              지난달 값 불러오기
-            </Button>
-          </>
-        }
+        tools={<ExcelUpload model={model} month={month} onMonthChange={onMonthChange} />}
       />
 
       <MonthCalendar model={model} month={month} thisMonth={thisMonth} onMonthChange={onMonthChange} />
@@ -288,7 +272,6 @@ function MasterCard({ model }: { model: SettlementModel }) {
                 <tr>
                   <th scope="col" style={thStyle}>이름</th>
                   <th scope="col" style={thStyle}>카테고리</th>
-                  <th scope="col" style={thStyle}>소유자</th>
                   {tab === 'liability' && <th scope="col" style={{ textAlign: 'right' }}>금리</th>}
                   <th scope="col" style={{ textAlign: 'right' }}>{tab === 'asset' ? '가치금액' : '잔액'}</th>
                   <th scope="col" style={{ width: 48 }}>
@@ -301,9 +284,6 @@ function MasterCard({ model }: { model: SettlementModel }) {
                   <tr key={a.id}>
                     <td className="strong">{a.name}</td>
                     <td>{a.category}</td>
-                    <td>
-                      <OwnerTag owner={OWNER_LABEL[a.owner]} />
-                    </td>
                     {tab === 'liability' && <td style={{ textAlign: 'right' }}>{a.interestRate === null ? '–' : `${a.interestRate.toFixed(2)}%`}</td>}
                     <td style={{ textAlign: 'right', padding: '8px 16px' }}>
                       <AmountInput
@@ -401,8 +381,6 @@ function SectorCard({ model }: { model: SettlementModel }) {
 /* ───────── 오른쪽 요약 ───────── */
 function SummaryCard({ model, month }: { model: SettlementModel; month: string }) {
   const s = summarizePnl(model.items, model.cur.entries)
-  const budgets = budgetLines(model.items, model.cur.entries)
-  const [editBudget, setEditBudget] = useState(false)
   const rows = [
     { label: '총 수입', value: s.income },
     { label: '총 지출', value: s.expense },
@@ -442,7 +420,7 @@ function SummaryCard({ model, month }: { model: SettlementModel; month: string }
       </div>
 
       {rates.map((r, i) => (
-        <div key={r.label} style={{ marginBottom: i === rates.length - 1 ? 18 : 14 }}>
+        <div key={r.label} style={{ marginBottom: i === rates.length - 1 ? 0 : 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 6 }}>
             <span style={{ fontWeight: 600 }}>{r.label}</span>
             <b>{formatPct(r.ratio)}</b>
@@ -451,39 +429,6 @@ function SummaryCard({ model, month }: { model: SettlementModel; month: string }
         </div>
       ))}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 14, fontWeight: 600 }}>변동비 예산</span>
-        <Button variant="ghost" size="sm" style={{ minHeight: 32, padding: '0 6px', fontSize: 13 }} aria-expanded={editBudget} onClick={() => setEditBudget((v) => !v)}>
-          {editBudget ? '완료' : '예산 설정'}
-        </Button>
-      </div>
-      {editBudget ? (
-        <div data-amount-scope="" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {model.items
-            .filter((i) => i.grp === 'variable')
-            .map((i) => (
-              <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                <span>{i.name}</span>
-                <AmountInput label={`${i.name} 월 예산`} width={120} value={i.monthlyBudget ?? undefined} onCommit={(n) => void model.setBudget(i.id, n === 0 ? null : n)} />
-              </div>
-            ))}
-          <p className="micro" style={{ marginTop: 4 }}>0 또는 빈칸이면 예산 없음</p>
-        </div>
-      ) : budgets.length === 0 ? (
-        <p className="micro">예산을 설정하면 항목별 남은 금액이 보여요.</p>
-      ) : (
-        budgets.map((b) => (
-          <div key={b.item.id} style={{ marginBottom: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
-              <span>{b.item.name}</span>
-              <span style={{ color: b.left < 0 ? 'var(--bad)' : 'var(--text-sub)', fontWeight: b.left < 0 ? 600 : 400 }}>
-                잔액 <b style={{ color: b.left < 0 ? 'var(--bad)' : 'var(--text)' }}>{formatNumber(b.left)}</b>
-              </span>
-            </div>
-            <ProgressBar pct={b.pct} overPct={b.overPct} height={8} />
-          </div>
-        ))
-      )}
     </Card>
   )
 }

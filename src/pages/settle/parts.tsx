@@ -131,27 +131,6 @@ export const DIFF_COLOR = {
   neutral: 'var(--text-sub)',
 } as const
 
-/** 복사(지난달 값 불러오기) 아이콘 — 공용 Icon 세트에 없어 로컬 정의 */
-export function CopyIcon({ size = 18, color = 'currentColor', style }: { size?: number; color?: string; style?: CSSProperties }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      fill="none"
-      stroke={color}
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ flexShrink: 0, ...style }}
-    >
-      <rect x="8" y="8" width="12" height="12" rx="2" />
-      <path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
-    </svg>
-  )
-}
-
 /** 저장 상태 표시 */
 export function SaveStatus({ save }: { save: SaveState }) {
   if (save.kind === 'idle') return null

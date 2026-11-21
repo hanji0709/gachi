@@ -8,9 +8,10 @@ import { MFilterRow } from '../../components/layout/PageHead'
 import { Badge, Button, Card, Dot, Icon, IconButton, OwnerTag, ProgressBar } from '../../components/ui'
 import { groupTotal, sectorTotal, summarizePnl } from '../../data/compute'
 import { addMonths, formatNumber, formatPct, formatWon, splitMonth } from '../../data/format'
-import { OWNER_LABEL, SECTORS, type AccountKind, type PnlGroup } from '../../data/ledger'
+import { SECTORS, type AccountKind, type PnlGroup } from '../../data/ledger'
 import type { SettlementModel } from '../../data/useSettlement'
 import { AddAccountForm } from './AddAccountForm'
+import { ExcelUpload } from './ExcelUpload'
 import { AmountInput, SaveStatus } from './parts'
 import { closeRule, MONTH_BADGE, monthStatusOf, PNL_GROUP_TITLE } from './shared'
 
@@ -95,7 +96,7 @@ function MasterSection({ model, open, onToggle }: { model: SettlementModel; open
                   <InputRow
                     key={a.id}
                     title={a.name}
-                    sub={`${a.category} · ${OWNER_LABEL[a.owner]}${a.interestRate === null ? '' : ` · ${a.interestRate.toFixed(2)}%`}`}
+                    sub={`${a.category}${a.interestRate === null ? '' : ` · ${a.interestRate.toFixed(2)}%`}`}
                   >
                     <AmountInput
                       label={`${a.name} 금액`}
@@ -149,7 +150,6 @@ export function MSettle({ model, month, thisMonth, onMonthChange }: Props) {
     .reduce((sum, a) => sum + (model.cur.balances.get(a.id) ?? 0), 0)
   const inputSectorTotal = sectorTotal(model.cur)
   const sectorOk = masterInvest === inputSectorTotal
-  const budgetCount = model.items.filter((i) => i.grp === 'variable' && i.monthlyBudget).length
 
   return (
     <>
@@ -187,6 +187,8 @@ export function MSettle({ model, month, thisMonth, onMonthChange }: Props) {
           )
         })}
       </MFilterRow>
+
+      <ExcelUpload model={model} month={month} onMonthChange={onMonthChange} variant="m" />
 
       {model.save.kind !== 'idle' && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 13, color: 'var(--text-sub)', alignItems: 'center' }}>
@@ -324,42 +326,6 @@ export function MSettle({ model, month, thisMonth, onMonthChange }: Props) {
                 </InputRow>
               )
             })}
-          </Collapse>
-        </div>
-      </Card>
-
-      {/* 변동비 예산 */}
-      <Card pad="sm">
-        <div data-amount-scope="">
-          <SectionHead
-            title="변동비 예산"
-            right={<span style={{ fontSize: 13, color: 'var(--text-sub)' }}>{budgetCount > 0 ? `${budgetCount}개 설정` : '미설정'}</span>}
-            expanded={open.budget}
-            onToggle={() => toggle('budget')}
-          />
-          <Collapse open={Boolean(open.budget)}>
-            <p className="micro" style={{ padding: '2px 0 8px' }}>월 예산을 입력하면 이번 달 남은 금액이 보여요. 0이면 예산 없음.</p>
-            {model.items
-              .filter((i) => i.grp === 'variable')
-              .map((i) => {
-                const spent = model.cur.entries.get(i.id) ?? 0
-                const left = i.monthlyBudget ? i.monthlyBudget - spent : null
-                return (
-                  <InputRow
-                    key={i.id}
-                    title={i.name}
-                    sub={left === null ? `이번 달 ${formatWon(spent)}원` : `이번 달 ${formatWon(spent)}원 · 남음 ${formatNumber(left)}원`}
-                    subTone={left !== null && left < 0 ? 'bad' : undefined}
-                  >
-                    <AmountInput
-                      label={`${i.name} 월 예산`}
-                      width={128}
-                      value={i.monthlyBudget ?? undefined}
-                      onCommit={(n) => void model.setBudget(i.id, n === 0 ? null : n)}
-                    />
-                  </InputRow>
-                )
-              })}
           </Collapse>
         </div>
       </Card>
