@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button, Segmented, Select, TextField } from '../../components/ui'
 import { parseRate } from '../../data/format'
-import { ASSET_CATEGORIES, LIABILITY_CATEGORIES, OWNER_LABEL, type AccountKind, type AccountOwner, type NewAccount } from '../../data/ledger'
+import { ASSET_CATEGORIES, LIABILITY_CATEGORIES, type AccountKind, type NewAccount } from '../../data/ledger'
 
 interface Props {
   /** 처음 선택된 종류 (PC는 탭에서 정해짐) */
@@ -19,7 +19,6 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
   const categories = kind === 'asset' ? ASSET_CATEGORIES : LIABILITY_CATEGORIES
   const [name, setName] = useState('')
   const [category, setCategory] = useState<string>(categories[0])
-  const [owner, setOwner] = useState<AccountOwner>('joint')
   const [rate, setRate] = useState('')
   const [busy, setBusy] = useState(false)
   /** 이름 없이 추가를 누르면 안내 (버튼은 항상 눌리게 두고, 누른 뒤에 무엇이 빠졌는지 알려 줌) */
@@ -47,7 +46,8 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
       kind: effectiveKind,
       name,
       category: validCategory,
-      owner,
+      // 소유자 구분 없이 부부 통합 관리
+      owner: 'joint',
       interestRate: effectiveKind === 'liability' ? rateValue : null,
     })
     setBusy(false)
@@ -70,13 +70,6 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
         autoFocus
       />
       <Select id="acc-cat" label="카테고리" value={validCategory} onChange={setCategory} options={cats.map((c) => ({ value: c, label: c }))} />
-      <Select
-        id="acc-owner"
-        label="소유자"
-        value={owner}
-        onChange={(v) => setOwner(v as AccountOwner)}
-        options={(['joint', 'husband', 'wife'] as const).map((o) => ({ value: o, label: OWNER_LABEL[o] }))}
-      />
       {effectiveKind === 'liability' && (
         <TextField id="acc-rate" label="금리(%)" value={rate} onChange={setRate} placeholder="예: 3.9" error={rateInvalid ? '숫자로 입력해 주세요' : undefined} />
       )}
@@ -90,7 +83,7 @@ export function AddAccountForm({ kind: initialKind, onAdd, layout = 'pc', onCanc
         noValidate
         style={{
           display: 'grid',
-          gridTemplateColumns: effectiveKind === 'liability' ? '2fr 1.4fr 1fr 1fr auto' : '2fr 1.4fr 1fr auto',
+          gridTemplateColumns: effectiveKind === 'liability' ? '2fr 1.4fr 1fr auto' : '2fr 1.4fr auto',
           gap: 12,
           alignItems: 'end',
           padding: 16,

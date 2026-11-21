@@ -9,7 +9,6 @@ import {
   InfoChip,
   LegendGrid,
   ListRow,
-  OwnerChips,
   Segmented,
   StackBar,
   StatCard,
@@ -42,7 +41,6 @@ export function MBalance({ view }: { view: BalanceView }) {
     <>
       <MFilterRow>
         <MonthPicker view={view} variant="m" />
-        <OwnerChips variant="m" bare value={view.owners} onChange={view.setOwners} />
         <Segmented
           label="통화"
           options={['₩', '$']}
@@ -79,7 +77,7 @@ export function MBalance({ view }: { view: BalanceView }) {
           items={sheet.assetByCategory.map((c) => ({ label: c.label, color: ASSET_COLORS[c.label], pct: pctOf(c.value, sheet.totalAssets) }))}
           style={{ marginTop: 12 }}
         />
-        <AccountList view={view} rows={view.assets} noun="자산" sub={(r) => `${r.account.category} · ${view.ownerLabelOf(r.account.owner)}`} />
+        <AccountList view={view} rows={view.assets} noun="자산" sub={(r) => r.account.category} />
       </Card>
 
       {/* 부채 구성 */}

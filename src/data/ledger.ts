@@ -7,7 +7,7 @@ export type AccountOwner = 'joint' | 'husband' | 'wife'
 export type PnlGroup = 'income' | 'fixed' | 'variable' | 'saving'
 export type SettlementStatus = 'in_progress' | 'closed'
 
-export const ASSET_CATEGORIES = ['부동산', '금융투자', '예적금', '연금', '기타'] as const
+export const ASSET_CATEGORIES = ['부동산', '금융투자', '예적금', '기타'] as const
 export const LIABILITY_CATEGORIES = ['주택담보대출', '전세보증금', '신용대출', '기타대출'] as const
 export const SECTORS = ['시장지수', 'AI하드웨어', '첨단산업', 'AI소프트웨어', '채권', '암호화폐', '바이오/헬스', '기타'] as const
 export type Sector = (typeof SECTORS)[number]

@@ -1,5 +1,5 @@
 import type { Account, AccountOwner, MonthValues, PnlGroup, PnlItem, Sector } from './ledger'
-import { SECTORS } from './ledger'
+import { ASSET_CATEGORIES, LIABILITY_CATEGORIES, SECTORS } from './ledger'
 
 /* ───────── 월별 손익 ───────── */
 export interface PnlSummary {
@@ -15,11 +15,12 @@ export interface PnlSummary {
   mismatch: number
   /** 저축/투자율 = 저축/투자/상환 ÷ 수입 */
   savingRate: number
-  /** DSR = (대출 원금 + 대출 이자) ÷ 수입 */
+  /** DSR = (대출 원금 + 대출 이자비용) ÷ 수입 */
   dsr: number
 }
 
-const DEBT_SERVICE_ITEMS = ['대출 원금', '대출 이자']
+// '대출 이자'는 예전 기본 항목명 (엑셀 기준 이름은 '대출 이자비용')
+const DEBT_SERVICE_ITEMS = ['대출 원금', '대출 이자비용', '대출 이자']
 
 export function groupTotal(items: PnlItem[], entries: Map<string, number>, grp: PnlGroup): number {
   return items.filter((i) => i.grp === grp).reduce((sum, i) => sum + (entries.get(i.id) ?? 0), 0)
@@ -139,8 +140,8 @@ export function computeSheet(accounts: Account[], balances: Map<string, number>,
     totalAssets,
     totalDebt,
     netWorth: totalAssets - totalDebt,
-    assetByCategory: byCat(assets, ['부동산', '금융투자', '예적금', '연금', '기타']),
-    debtByCategory: byCat(debts, ['주택담보대출', '전세보증금', '신용대출', '기타대출']),
+    assetByCategory: byCat(assets, ASSET_CATEGORIES),
+    debtByCategory: byCat(debts, LIABILITY_CATEGORIES),
     weightedRate,
     debtRatio: totalAssets > 0 ? totalDebt / totalAssets : NaN,
     liquid: sum(assets.filter((a) => a.category === '예적금')),

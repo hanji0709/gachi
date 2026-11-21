@@ -2,3 +2,8 @@ node_modules
 dist
 *.local
 .vite
+
+# 가계 엑셀 원본 (개인 금융 데이터)
+*.xlsx
+*.xls
+~$*

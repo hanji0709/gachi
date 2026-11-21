@@ -8,9 +8,6 @@ import {
   InfoChip,
   Legend,
   Money,
-  OWNER_COLOR,
-  OwnerChips,
-  OwnerTag,
   ProgressBar,
   Segmented,
   StackBar,
@@ -21,7 +18,6 @@ import {
   TipTitle,
 } from '../../components/ui'
 import { formatNumber, formatPct } from '../../data/format'
-import type { AccountOwner } from '../../data/ledger'
 import { NetWorthTrendPc } from './NetWorthTrend'
 import { MonthPicker } from './parts'
 import { ASSET_COLORS, DEBT_COLORS, type AccountRow, type BalanceView, type Period } from './useBalanceView'
@@ -32,9 +28,10 @@ const twoCol = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(
  * 자산·부채 표 줄: 표 5열이 가로 스크롤 없이 들어가려면 카드당 약 700px가 필요.
  * 그보다 좁은 화면에서는 두 카드를 위아래로 쌓는다.
  */
-const tableRow = { ...twoCol, gridTemplateColumns: 'repeat(auto-fit, minmax(min(700px, 100%), 1fr))' }
+/** DSR 경고 기준 (은행권 DSR 규제 40%) */
+const DSR_LIMIT = 0.4
 
-const OWNERS: AccountOwner[] = ['joint', 'husband', 'wife']
+const tableRow = { ...twoCol, gridTemplateColumns: 'repeat(auto-fit, minmax(min(700px, 100%), 1fr))' }
 
 export function PcBalance({ view }: { view: BalanceView }) {
   const { sheet, prevSheet } = view
@@ -51,11 +48,10 @@ export function PcBalance({ view }: { view: BalanceView }) {
     <>
       <PageHead
         title="대시보드(재무상태표)"
-        desc={`${view.basisLabel} · ${view.ownerLabel}`}
+        desc={view.basisLabel}
         tools={
           <>
             <MonthPicker view={view} />
-            <OwnerChips value={view.owners} onChange={view.setOwners} />
             <Segmented
               label="통화"
               options={['원화', '달러']}
@@ -135,50 +131,51 @@ export function PcBalance({ view }: { view: BalanceView }) {
         </Card>
       </div>
 
-      <div style={twoCol}>
-        {/* 지표 */}
-        <Card>
-          <CardHeader title="지표" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>
-            <SubBox>
-              <div className="label">부채비율</div>
-              <div style={{ fontSize: 28, fontWeight: 600, margin: '6px 0' }}>{formatPct(sheet.debtRatio)}</div>
-              <ProgressBar animate={BAR_FILL_DURATION} pct={Number.isFinite(sheet.debtRatio) ? Math.min(100, sheet.debtRatio * 100) : 0} height={8} />
-            </SubBox>
-            <SubBox>
-              <div className="label">유동성 자산</div>
-              <div style={{ margin: '6px 0' }}>
-                <Money {...view.money(sheet.liquid)} size={24} unitSize={12} />
-              </div>
-              <div className="micro">
-                예적금 합계
-                {view.fixedExpense > 0 && ` · 월 고정지출의 ${(sheet.liquid / view.fixedExpense).toFixed(1)}배`}
-              </div>
-            </SubBox>
-          </div>
-        </Card>
-
-        {/* 소유자별 순자산 */}
-        <Card>
-          <CardHeader title="소유자별 순자산" />
-          {OWNERS.filter((o) => view.owners.includes(view.ownerLabelOf(o))).map((o) => {
-            const value = sheet.byOwner[o]
-            const share = sheet.netWorth !== 0 ? value / sheet.netWorth : 0
-            const label = view.ownerLabelOf(o)
-            return (
-              <div key={o} style={{ marginBottom: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 6 }}>
-                  <OwnerTag owner={label} />
-                  <span style={{ fontWeight: 600 }}>
-                    {view.moneyText(value)} <span style={{ color: 'var(--text-sub)', fontWeight: 400 }}>· {formatPct(share, 1)}</span>
-                  </span>
+      {/* 지표: 부채비율 · 유동성 자산 · DSR */}
+      <Card style={{ marginTop: 20 }}>
+        <CardHeader title="지표" right={<span className="micro">{view.month} 결산 기준</span>} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: 16 }}>
+          <SubBox>
+            <div className="label">부채비율</div>
+            <div style={{ fontSize: 28, fontWeight: 600, margin: '6px 0' }}>{formatPct(sheet.debtRatio)}</div>
+            <ProgressBar animate={BAR_FILL_DURATION} pct={Number.isFinite(sheet.debtRatio) ? Math.min(100, sheet.debtRatio * 100) : 0} height={8} />
+            <div className="micro" style={{ marginTop: 8 }}>
+              총부채 ÷ 총자산{view.excludeJeonse && ' · 전세금 제외'}
+            </div>
+          </SubBox>
+          <SubBox>
+            <div className="label">유동성 자산</div>
+            <div style={{ margin: '6px 0' }}>
+              <Money {...view.money(sheet.liquid)} size={28} unitSize={13} />
+            </div>
+            <div className="micro" style={{ marginTop: 8 }}>
+              예적금 합계
+              {view.fixedExpense > 0 && ` · 월 고정지출의 ${(sheet.liquid / view.fixedExpense).toFixed(1)}배`}
+            </div>
+          </SubBox>
+          <SubBox>
+            <div className="label">DSR (총부채원리금상환비율)</div>
+            {Number.isFinite(view.dsr) ? (
+              <>
+                <div style={{ fontSize: 28, fontWeight: 600, margin: '6px 0', color: view.dsr > DSR_LIMIT ? 'var(--warn)' : undefined }}>{formatPct(view.dsr)}</div>
+                <ProgressBar
+                  animate={BAR_FILL_DURATION}
+                  pct={Math.min(100, view.dsr * 100)}
+                  height={8}
+                  color={view.dsr > DSR_LIMIT ? 'var(--warn)' : 'var(--cyan-500)'}
+                />
+                <div className="micro" style={{ marginTop: 8 }}>
+                  (대출 원금 + 이자) ÷ 월 수입 · 기준 {formatPct(DSR_LIMIT, 0)}
                 </div>
-                <ProgressBar animate={BAR_FILL_DURATION} pct={Math.max(0, Math.min(100, share * 100))} height={10} color={OWNER_COLOR[label]} />
+              </>
+            ) : (
+              <div className="micro" style={{ marginTop: 10 }}>
+                이 달 수입을 입력하면 계산돼요.
               </div>
-            )
-          })}
-        </Card>
-      </div>
+            )}
+          </SubBox>
+        </div>
+      </Card>
 
       {/* 금융투자 섹터 비중 */}
       <Card style={{ marginTop: 20 }}>
@@ -252,7 +249,7 @@ function AccountTable({ view, rows, kind }: { view: BalanceView; rows: AccountRo
           <tr>
             <th scope="col">이름</th>
             <th scope="col">카테고리</th>
-            {kind === 'asset' ? <th scope="col">소유자</th> : <th scope="col" style={{ textAlign: 'right' }}>금리</th>}
+            <th scope="col" style={{ textAlign: 'right' }}>{kind === 'asset' ? '비중' : '금리'}</th>
             <th scope="col" style={{ textAlign: 'right' }}>{kind === 'asset' ? '가치금액' : '잔액'}</th>
             {view.hasPrev && <th scope="col" style={{ textAlign: 'right' }}>전월 대비</th>}
           </tr>
@@ -264,13 +261,13 @@ function AccountTable({ view, rows, kind }: { view: BalanceView; rows: AccountRo
               <tr key={a.id}>
                 <td className="strong">{a.name}</td>
                 <td>{a.category}</td>
-                {kind === 'asset' ? (
-                  <td>
-                    <OwnerTag owner={view.ownerLabelOf(a.owner)} />
-                  </td>
-                ) : (
-                  <td style={{ textAlign: 'right' }}>{a.interestRate === null ? '–' : `${a.interestRate.toFixed(2)}%`}</td>
-                )}
+                <td style={{ textAlign: 'right' }}>
+                  {kind === 'asset'
+                    ? formatPct(view.sheet.totalAssets > 0 ? amount / view.sheet.totalAssets : 0, 1)
+                    : a.interestRate === null
+                      ? '–'
+                      : `${a.interestRate.toFixed(2)}%`}
+                </td>
                 <td className="strong" style={{ textAlign: 'right' }}>{view.moneyText(amount)}</td>
                 {view.hasPrev && (
                   <td style={{ textAlign: 'right' }}>

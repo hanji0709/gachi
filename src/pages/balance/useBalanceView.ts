@@ -1,17 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import type { Owner, Tone } from '../../components/ui'
+import type { Tone } from '../../components/ui'
 import { computeSheet, sectorList, sectorTotal, summarizePnl, type BalanceSheet } from '../../data/compute'
 import { addMonths, formatDelta, formatShort, formatUsd, formatWon, monthEndLabel } from '../../data/format'
-import { OWNER_LABEL, type Account, type AccountOwner } from '../../data/ledger'
+import type { Account, AccountOwner } from '../../data/ledger'
 import type { BalanceSheetModel } from '../../data/useBalanceSheet'
 
 export const ASSET_COLORS: Record<string, string> = {
   부동산: 'var(--chart-1)',
   금융투자: 'var(--chart-2)',
   예적금: 'var(--chart-3)',
-  연금: 'var(--chart-4)',
-  기타: 'var(--chart-5)',
+  기타: 'var(--chart-4)',
 }
 export const DEBT_COLORS: Record<string, string> = {
   주택담보대출: 'var(--violet-900)',
@@ -24,8 +23,8 @@ export const SECTOR_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3
 export type Currency = 'krw' | 'usd'
 export type Period = '1년' | '3년' | '전체'
 
-const OWNER_KEY: Record<Owner, AccountOwner> = { 공동: 'joint', 남편: 'husband', 아내: 'wife' }
-const ALL_OWNERS: Owner[] = ['공동', '남편', '아내']
+/** 소유자 구분 없이 부부 통합으로 계산 */
+const ALL_OWNERS = new Set<AccountOwner>(['joint', 'husband', 'wife'])
 
 export interface AccountRow {
   account: Account
@@ -33,10 +32,9 @@ export interface AccountRow {
   delta: number | null
 }
 
-/** 재무상태표 화면 상태(기준월·소유자·통화·전세금·기간) + 표시용 계산 */
+/** 재무상태표 화면 상태(기준월·통화·전세금·기간) + 표시용 계산 */
 export function useBalanceView(model: BalanceSheetModel) {
   const [params, setParams] = useSearchParams()
-  const [owners, setOwners] = useState<Owner[]>(ALL_OWNERS)
   const [currency, setCurrency] = useState<Currency>('krw')
   const [excludeJeonse, setExcludeJeonse] = useState(false)
   const [period, setPeriod] = useState<Period>('1년')
@@ -59,7 +57,7 @@ export function useBalanceView(model: BalanceSheetModel) {
   const usd = currency === 'usd' && fx !== null
 
   const view = useMemo(() => {
-    const opt = { owners: new Set(owners.map((o) => OWNER_KEY[o])), excludeJeonse }
+    const opt = { owners: ALL_OWNERS, excludeJeonse }
     const cur = model.valuesOf(month)
     const prev = prevSettlement ? model.valuesOf(prevMonth) : null
     const sheet = computeSheet(model.accounts, cur.balances, opt)
@@ -67,7 +65,7 @@ export function useBalanceView(model: BalanceSheetModel) {
 
     const rows = (kind: 'asset' | 'liability'): AccountRow[] =>
       model.accounts
-        .filter((a) => a.kind === kind && opt.owners.has(a.owner) && (cur.balances.has(a.id) || !a.archived))
+        .filter((a) => a.kind === kind && (cur.balances.has(a.id) || !a.archived))
         .filter((a) => !(kind === 'liability' && excludeJeonse && a.category === '전세보증금'))
         .map((a) => ({
           account: a,
@@ -85,7 +83,7 @@ export function useBalanceView(model: BalanceSheetModel) {
         return { month: s.month, value: t.netWorth, assets: t.totalAssets, debts: t.totalDebt }
       })
 
-    const fixedExpense = summarizePnl(model.items, cur.entries).fixed
+    const pnl = summarizePnl(model.items, cur.entries)
 
     return {
       sheet,
@@ -95,9 +93,12 @@ export function useBalanceView(model: BalanceSheetModel) {
       sectors: sectorList(cur).map((s, i) => ({ ...s, color: SECTOR_COLORS[i] })),
       sectorTotal: sectorTotal(cur),
       trend,
-      fixedExpense,
+      fixedExpense: pnl.fixed,
+      income: pnl.income,
+      /** (대출 원금 + 대출 이자비용) ÷ 월 수입 */
+      dsr: pnl.dsr,
     }
-  }, [model, month, prevMonth, prevSettlement, owners, excludeJeonse, period])
+  }, [model, month, prevMonth, prevSettlement, excludeJeonse, period])
 
   /** 금액 표시 (통화 반영): Money 컴포넌트에 넘길 값·단위 */
   const money = (won: number) => (usd ? { value: `$${formatUsd(won / (fx as number))}`, unit: '' } : { value: formatWon(won), unit: '원' })
@@ -118,9 +119,6 @@ export function useBalanceView(model: BalanceSheetModel) {
     settlement,
     hasPrev: Boolean(prevSettlement),
     basisLabel: month ? `${monthEndLabel(month)} ${settlement?.status === 'closed' ? '마감' : '입력'} 기준` : '',
-    ownerLabel: owners.length === 3 ? '공동·남편·아내 합산' : owners.length === 0 ? '선택한 소유자 없음' : `${owners.join('·')} 합산`,
-    owners,
-    setOwners,
     currency,
     setCurrency,
     fx,
@@ -133,7 +131,6 @@ export function useBalanceView(model: BalanceSheetModel) {
     moneyText,
     short,
     delta,
-    ownerLabelOf: (o: AccountOwner) => OWNER_LABEL[o],
     ...view,
   }
 }

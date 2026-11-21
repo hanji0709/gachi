@@ -2,35 +2,29 @@ import { Link } from 'react-router-dom'
 import { Button, Card, Icon, cx } from '../../components/ui'
 import type { BalanceView } from './useBalanceView'
 
-/** 기준 결산월 선택 (디자인의 "2026-10 마감 ▾" 버튼 모양의 선택 상자) */
+/**
+ * 기준 결산월 선택 (디자인의 "2026-10 마감 ▾" 버튼 모양)
+ * 보이는 글자·아이콘 위에 투명한 선택 상자를 버튼 전체 크기로 덮어,
+ * 달력 아이콘·글자·펼침 화살표 어디를 눌러도 목록이 열린다.
+ */
 export function MonthPicker({ view, variant = 'pc' }: { view: BalanceView; variant?: 'pc' | 'm' }) {
   const m = variant === 'm'
+  const current = view.months.find((o) => o.month === view.month)
   return (
-    <label className={cx('picker-btn', m && 'picker-btn--m')} style={{ position: 'relative', cursor: 'pointer' }}>
+    <span className={cx('picker-btn', 'picker-btn--select', m && 'picker-btn--m')}>
       <Icon name="calendar" size={m ? 16 : 18} color="var(--text-sub)" />
-      <select
-        aria-label="기준 결산월"
-        value={view.month ?? ''}
-        onChange={(e) => view.setMonth(e.target.value)}
-        style={{
-          appearance: 'none',
-          border: 'none',
-          background: 'transparent',
-          font: 'inherit',
-          fontWeight: 600,
-          color: 'var(--text)',
-          paddingRight: 2,
-          cursor: 'pointer',
-        }}
-      >
+      <span aria-hidden="true" style={{ fontWeight: 600 }}>
+        {current ? `${current.month} ${current.closed ? '마감' : '입력 중'}` : ''}
+      </span>
+      <Icon name="chevronDown" size={m ? 14 : 16} color="var(--text-sub)" />
+      <select aria-label="기준 결산월" value={view.month ?? ''} onChange={(e) => view.setMonth(e.target.value)} className="picker-btn__select">
         {[...view.months].reverse().map((o) => (
           <option key={o.month} value={o.month}>
             {o.month} {o.closed ? '마감' : '입력 중'}
           </option>
         ))}
       </select>
-      <Icon name="chevronDown" size={m ? 14 : 16} color="var(--text-sub)" />
-    </label>
+    </span>
   )
 }
 
