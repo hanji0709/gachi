@@ -12,7 +12,7 @@ import { supabase } from '../lib/supabase'
  * 등록·해제한다. 채널이 닫히거나 오류가 나면 잠시 뒤 다시 연결하고, 놓친 변경을 위해 다시 불러오게 한다.
  */
 
-const TABLES = ['settlements', 'accounts', 'pnl_items', 'account_balances', 'pnl_entries', 'sector_amounts'] as const
+const TABLES = ['settlements', 'accounts', 'pnl_items', 'account_balances', 'pnl_entries', 'sector_amounts', 'cash_items', 'cash_months'] as const
 export type RealtimeTable = (typeof TABLES)[number]
 
 /** 재연결: 2초부터 두 배씩, 최대 30초 */
@@ -34,7 +34,7 @@ function connect(h: Hub) {
   h.channel = channel
   for (const table of TABLES) {
     // 가구 id가 있는 테이블은 필터, 결산 하위 테이블은 RLS가 같은 가구 변경만 전달
-    const filter = table === 'settlements' || table === 'accounts' || table === 'pnl_items' ? `household_id=eq.${h.householdId}` : undefined
+    const filter = ['settlements', 'accounts', 'pnl_items', 'cash_items', 'cash_months'].includes(table) ? `household_id=eq.${h.householdId}` : undefined
     channel.on('postgres_changes', { event: '*', schema: 'public', table, filter }, () => h.listeners.forEach((l) => l(table)))
   }
   channel.subscribe((status) => {

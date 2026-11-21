@@ -1,45 +1,26 @@
-import type { CSSProperties } from 'react'
-import { Button, Card, CardHeader, Dot, Icon, IconButton, OWNER_COLOR, StatCard, Tabs, type Owner } from '../../components/ui'
-import { BalanceChart, M_CHART } from './BalanceChart'
+import { useState } from 'react'
+import { Button, Card, CardHeader, Icon, StatCard } from '../../components/ui'
+import { CASH_KIND_LABEL, SAFETY_BALANCE, type CashEvent, type CashModel } from '../../data/cash'
+import { formatDelta, formatShort, formatWon } from '../../data/format'
+import { AmountInput } from '../settle/parts'
+import { BalanceChart } from './BalanceChart'
+import { CashTabs, FixedItems, MonthStepper } from './CashParts'
+import { PlanCard } from './PcCash'
 
-/* ───────── 데이터 (디자인 값 그대로) ───────── */
-interface DayGroup {
-  day: string
-  balance: string
-  danger?: boolean
-  items: { name: string; owner: Owner; amount: string; income?: boolean }[]
+interface Props {
+  cash: CashModel
+  month: string
+  onMonthChange: (m: string) => void
+  tab: 'flow' | 'items'
+  onTab: (t: 'flow' | 'items') => void
 }
 
-const DAYS: DayGroup[] = [
-  {
-    day: '20일 · 오늘',
-    balance: '잔액 2,337,043원',
-    danger: true,
-    items: [
-      { name: 'B생명 주담대', owner: '공동', amount: '−456,789' },
-      { name: 'C은행 주담대', owner: '공동', amount: '−1,234,567' },
-    ],
-  },
-  {
-    day: '21일',
-    balance: '잔액 6,904,933원',
-    items: [{ name: '아내 근로소득', owner: '아내', amount: '+4,567,890', income: true }],
-  },
-  {
-    day: '22일',
-    balance: '잔액 6,583,835원',
-    items: [{ name: 'E은행 신용대출', owner: '남편', amount: '−321,098' }],
-  },
-  {
-    day: '25일',
-    balance: '잔액 10,904,933원',
-    items: [{ name: '남편 근로소득', owner: '남편', amount: '+4,321,098', income: true }],
-  },
-]
+const note = { fontSize: 12, color: 'var(--text-sub)', marginTop: 2 } as const
 
-const note: CSSProperties = { fontSize: 12, color: 'var(--text-sub)', marginTop: 2 }
-
-function DaySection({ g }: { g: DayGroup }) {
+/** 같은 날 입출금 묶음 */
+function DaySection({ day, events }: { day: number; events: CashEvent[] }) {
+  const balance = events[events.length - 1].balance
+  const danger = balance < SAFETY_BALANCE
   return (
     <div style={{ padding: '4px 0 8px' }}>
       <div
@@ -49,103 +30,127 @@ function DaySection({ g }: { g: DayGroup }) {
           alignItems: 'center',
           padding: '10px 12px',
           borderRadius: 12,
-          background: g.danger ? 'var(--bad-bg)' : 'var(--surface-sub)',
+          background: danger ? 'var(--bad-bg)' : 'var(--surface-sub)',
           fontSize: 13,
           fontWeight: 600,
-          color: g.danger ? 'var(--bad)' : 'var(--text)',
+          color: danger ? 'var(--bad)' : 'var(--text)',
         }}
       >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          {g.danger && <Icon name="warning" size={15} color="var(--bad)" strokeWidth={2} />}
-          {g.day}
+          {danger && <Icon name="warning" size={15} color="var(--bad)" strokeWidth={2} />}
+          {day}일
         </span>
-        <span>{g.balance}</span>
+        <span>잔액 {formatWon(balance)}원</span>
       </div>
-      {g.items.map((it) => (
-        <div
-          key={it.name}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '10px 0',
-            borderTop: '1px solid var(--line)',
-            minHeight: 44,
-            boxSizing: 'border-box',
-          }}
-        >
-          <Dot color={OWNER_COLOR[it.owner]} />
-          <span style={{ flex: 1, fontSize: 15 }}>{it.name}</span>
-          <b style={{ fontSize: 15, color: it.income ? 'var(--good)' : 'var(--text)' }}>{it.amount}</b>
+      {events.map((e) => (
+        <div key={e.item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: '1px solid var(--line)', minHeight: 44, boxSizing: 'border-box' }}>
+          <span style={{ flex: 1, fontSize: 15, minWidth: 0 }}>
+            {e.item.name} <span className="micro">· {CASH_KIND_LABEL[e.item.kind]}</span>
+          </span>
+          <b style={{ fontSize: 15, color: e.delta > 0 ? 'var(--good)' : 'var(--text)' }}>
+            {e.delta > 0 ? '+' : '−'}
+            {formatWon(Math.abs(e.delta))}
+          </b>
         </div>
       ))}
     </div>
   )
 }
 
-/* ───────── 화면 ───────── */
-export function MCash() {
+export function MCash({ cash, month, onMonthChange, tab, onTab }: Props) {
+  const p = cash.projection
+  const [editStart, setEditStart] = useState(false)
+  const short = p.min < SAFETY_BALANCE
+  const byDay = new Map<number, CashEvent[]>()
+  for (const e of p.events) byDay.set(e.day, [...(byDay.get(e.day) ?? []), e])
+
   return (
     <>
-      {/* 고정 항목 탭 내용은 디자인에 없어 현금흐름 내용을 그대로 보여 줌 */}
-      <Tabs variant="pill" tabs={['현금흐름', '고정 항목']} />
+      <CashTabs tab={tab} onChange={onTab} count={cash.items.length} m />
+      <MonthStepper month={month} onChange={onMonthChange} m />
+      {cash.error && (
+        <p role="alert" style={{ color: 'var(--bad)', fontWeight: 600 }}>
+          {cash.error}
+        </p>
+      )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <IconButton icon="chevronLeft" label="이전 달" iconSize={22} />
-        <b style={{ fontSize: 15 }}>2026년 11월</b>
-        <IconButton icon="chevronRight" label="다음 달" iconSize={22} />
-      </div>
+      {tab === 'items' ? (
+        <Card pad="md">
+          <CardHeader variant="m" title="고정 항목" />
+          <FixedItems cash={cash} m />
+        </Card>
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 10 }}>
+            <StatCard
+              size="m"
+              label="시작 잔액"
+              value={formatWon(p.start)}
+              footer={
+                <button
+                  type="button"
+                  aria-expanded={editStart}
+                  onClick={() => setEditStart((v) => !v)}
+                  style={{ display: 'block', marginTop: 2, padding: 0, border: 'none', background: 'transparent', fontSize: 12, color: 'var(--violet-700)', fontWeight: 600 }}
+                >
+                  {editStart ? '닫기' : '편집'}
+                </button>
+              }
+            />
+            <StatCard size="m" label="월말 예상" value={formatWon(p.end)} delta={formatDelta(p.end - p.start)} deltaTone={p.end >= p.start ? 'good' : 'bad'} />
+            <StatCard
+              size="m"
+              label={`최저 잔액${p.minDay ? ` · ${p.minDay}일` : ''}`}
+              value={formatWon(p.min)}
+              valueColor={short ? 'var(--bad)' : undefined}
+              outline={short ? 'bad' : undefined}
+              footer={short ? <div style={{ fontSize: 12, color: 'var(--bad)', fontWeight: 600 }}>안전 잔액보다 {formatWon(SAFETY_BALANCE - p.min)} 부족</div> : <div style={note}>안전 잔액 이상</div>}
+            />
+            <StatCard size="m" label="쓸 수 있는 잉여" value={formatWon(Math.max(0, p.surplus))} footer={<div style={note}>안전 잔액 {formatShort(SAFETY_BALANCE)} 제외</div>} />
+          </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 10 }}>
-        <StatCard
-          size="m"
-          label="시작 잔액"
-          value="9,876,543"
-          footer={
-            <button
-              type="button"
-              aria-label="시작 잔액 편집"
-              style={{
-                display: 'block',
-                marginTop: 2,
-                padding: 0,
-                border: 'none',
-                background: 'transparent',
-                fontSize: 12,
-                color: 'var(--violet-700)',
-                fontWeight: 600,
-              }}
-            >
-              편집
-            </button>
-          }
-        />
-        <StatCard size="m" label="월말 예상" value="9,213,577" delta="▼ −662,966원" deltaTone="good" />
-        <StatCard
-          size="m"
-          label="최저 잔액 · 20일"
-          value="2,337,043"
-          valueColor="var(--bad)"
-          outline="bad"
-          footer={<div style={{ fontSize: 12, color: 'var(--bad)', fontWeight: 600 }}>안전 잔액보다 662,957 부족</div>}
-        />
-        <StatCard size="m" label="쓸 수 있는 잉여" value="6,213,577" footer={<div style={note}>안전 잔액 300만 제외</div>} />
-      </div>
+          {editStart && (
+            <Card pad="sm" data-amount-scope="">
+              <div className="label" style={{ marginBottom: 8 }}>
+                시작 잔액 <span className="micro">· {cash.startIsDefault ? cash.startBasis : '직접 입력한 값'}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <AmountInput label="시작 잔액" value={p.start} width="100%" onCommit={(n) => void cash.setStart(n)} />
+                {!cash.startIsDefault && (
+                  <Button variant="secondary" size="sm" onClick={() => void cash.setStart(null)}>
+                    결산값으로
+                  </Button>
+                )}
+              </div>
+            </Card>
+          )}
 
-      <Card pad="md">
-        <CardHeader variant="m" title="예상 잔액" right={<span style={{ fontSize: 12, color: 'var(--text-sub)' }}>점을 누르면 그날로</span>} />
-        <BalanceChart g={M_CHART} />
-      </Card>
+          {cash.items.length === 0 ? (
+            <Card pad="md" style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: 14, marginBottom: 12 }}>매달 반복되는 입출금을 등록하면 날짜별 잔액을 미리 계산해요.</p>
+              <Button block onClick={() => onTab('items')}>
+                고정 항목 등록하기
+              </Button>
+            </Card>
+          ) : (
+            <>
+              <Card pad="md">
+                <CardHeader variant="m" title="예상 잔액" right={<span style={{ fontSize: 12, color: 'var(--text-sub)' }}>점을 누르면 그날 내역</span>} />
+                <BalanceChart proj={p} width={360} height={220} />
+              </Card>
 
-      <Card pad="md">
-        <CardHeader variant="m" title="날짜별 현금흐름" right={<span style={{ fontSize: 12, color: 'var(--text-sub)' }}>20일부터</span>} />
-        {DAYS.map((g) => (
-          <DaySection key={g.day} g={g} />
-        ))}
-        <Button variant="secondary" block>
-          + 이번 달만 추가
-        </Button>
-      </Card>
+              <Card pad="md">
+                <CardHeader variant="m" title="날짜별 현금흐름" />
+                {[...byDay].map(([day, events]) => (
+                  <DaySection key={day} day={day} events={events} />
+                ))}
+              </Card>
+
+              <PlanCard key={month} cash={cash} m />
+            </>
+          )}
+        </>
+      )}
     </>
   )
 }
