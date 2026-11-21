@@ -6,7 +6,7 @@ import { OnboardingPage } from './pages/auth/OnboardingPage'
 import { SignupPage } from './pages/auth/SignupPage'
 import { BalancePage } from './pages/balance'
 import { CashPage } from './pages/cash'
-import { FirePage, ForecastPage } from './pages/fire'
+import { FirePage } from './pages/fire'
 import { PnlPage } from './pages/pnl'
 import { SettlePage } from './pages/settle'
 
@@ -26,7 +26,8 @@ export default function App() {
         <Route path="/pnl" element={<PnlPage />} />
         <Route path="/cash" element={<CashPage />} />
         <Route path="/fire" element={<FirePage />} />
-        <Route path="/fire/forecast" element={<ForecastPage />} />
+        {/* 미래 예측은 경제적 자유 화면에 합쳐짐 (예전 주소로 와도 같은 화면) */}
+        <Route path="/fire/forecast" element={<Navigate to="/fire" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/balance" replace />} />
     </Routes>

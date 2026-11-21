@@ -11,6 +11,9 @@ export interface Household {
   inviteCode: string
   /** 가구를 만들 때 넣은 예시 데이터가 남아 있는지 (My 메뉴에서 지울 수 있음) */
   hasSample: boolean
+  /** 경제적 자유 목표: 지표 A 목표 자산 · 지표 B 부부 생활비 예산(월) */
+  fireTargetAsset: number
+  fireLivingCost: number
 }
 
 export interface Member {
@@ -76,11 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data: mine, error } = await supabase
         .from('household_members')
-        .select('household:households(id, name, invite_code, has_sample)')
+        .select('household:households(id, name, invite_code, has_sample, fire_target_asset, fire_living_cost)')
         .eq('user_id', userId)
         .maybeSingle()
       if (error) throw error
-      const h = (mine?.household ?? null) as { id: string; name: string; invite_code: string; has_sample: boolean } | null
+      const h = (mine?.household ?? null) as { id: string; name: string; invite_code: string; has_sample: boolean; fire_target_asset: number; fire_living_cost: number } | null
       if (!h) {
         setHousehold(null)
         setMembers([])
@@ -92,7 +95,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('household_id', h.id)
         .order('joined_at')
       if (mErr) throw mErr
-      setHousehold({ id: h.id, name: h.name, inviteCode: h.invite_code, hasSample: h.has_sample })
+      setHousehold({
+        id: h.id,
+        name: h.name,
+        inviteCode: h.invite_code,
+        hasSample: h.has_sample,
+        fireTargetAsset: Number(h.fire_target_asset),
+        fireLivingCost: Number(h.fire_living_cost),
+      })
       setMembers(
         (rows ?? []).map((r) => ({ userId: r.user_id as string, role: r.role as MemberRole, displayName: r.display_name as string })),
       )

@@ -80,6 +80,79 @@ export type Database = {
           },
         ]
       }
+      cash_items: {
+        Row: {
+          amount: number
+          created_at: string
+          day: number
+          household_id: string
+          id: string
+          kind: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          day: number
+          household_id: string
+          id?: string
+          kind: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          day?: number
+          household_id?: string
+          id?: string
+          kind?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_items_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_months: {
+        Row: {
+          household_id: string
+          month: string
+          plan: Json | null
+          start_balance: number | null
+          updated_at: string
+        }
+        Insert: {
+          household_id: string
+          month: string
+          plan?: Json | null
+          start_balance?: number | null
+          updated_at?: string
+        }
+        Update: {
+          household_id?: string
+          month?: string
+          plan?: Json | null
+          start_balance?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_months_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       household_members: {
         Row: { display_name: string; household_id: string; joined_at: string; role: string; user_id: string }
         Insert: { display_name: string; household_id: string; joined_at?: string; role: string; user_id: string }
@@ -95,9 +168,9 @@ export type Database = {
         ]
       }
       households: {
-        Row: { created_at: string; created_by: string; has_sample: boolean; id: string; invite_code: string; name: string }
-        Insert: { created_at?: string; created_by: string; has_sample?: boolean; id?: string; invite_code: string; name: string }
-        Update: { created_at?: string; created_by?: string; has_sample?: boolean; id?: string; invite_code?: string; name?: string }
+        Row: { created_at: string; created_by: string; has_sample: boolean; id: string; invite_code: string; name: string; fire_target_asset: number; fire_living_cost: number }
+        Insert: { created_at?: string; created_by: string; has_sample?: boolean; id?: string; invite_code: string; name: string; fire_target_asset?: number; fire_living_cost?: number }
+        Update: { created_at?: string; created_by?: string; has_sample?: boolean; id?: string; invite_code?: string; name?: string; fire_target_asset?: number; fire_living_cost?: number }
         Relationships: []
       }
       pnl_entries: {
