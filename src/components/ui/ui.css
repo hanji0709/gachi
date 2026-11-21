@@ -245,6 +245,30 @@
   gap: 6px;
 }
 
+/* 선택 상자형 피커: 투명한 select가 버튼 전체를 덮어 어디를 눌러도 열림 */
+.picker-btn--select {
+  position: relative;
+  cursor: pointer;
+}
+.picker-btn--select:hover {
+  background: var(--surface-sub);
+}
+.picker-btn--select:has(.picker-btn__select:focus-visible) {
+  outline: 2px solid var(--violet-700);
+  outline-offset: 2px;
+}
+.picker-btn__select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font: inherit;
+  border: none;
+  appearance: none;
+}
+
 /* ───────── 세그먼트 토글 ───────── */
 .segmented {
   display: inline-flex;
@@ -602,15 +626,20 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  /* 아직 채워지지 않은 부분에 보이는 트랙 */
-  background: var(--surface-sub);
 }
-/* 색 고리: --p(0~1)만큼 12시 방향부터 시계 방향으로 보임. 기본 1 = 전부 보임 */
 .donut__ring {
   --p: 1;
   position: absolute;
   inset: 0;
   border-radius: 50%;
+}
+/* 화면에 들어올 때만: 회색 트랙 위로 색 고리가 --p(0→1)만큼 12시 방향부터 시계 방향으로 드러남.
+ * 마스크는 고리를 별도 층으로 그리게 해서, 도넛이 소수점 픽셀 위치에 있으면 배경과 0.5px쯤 어긋나 보인다.
+ * 그래서 다 그린 뒤에는 is-revealing을 떼어 트랙·마스크를 없앤다. */
+.donut.is-revealing {
+  background: var(--surface-sub);
+}
+.donut.is-revealing .donut__ring {
   -webkit-mask-image: conic-gradient(#000 calc(var(--p) * 1turn), transparent 0);
   mask-image: conic-gradient(#000 calc(var(--p) * 1turn), transparent 0);
 }

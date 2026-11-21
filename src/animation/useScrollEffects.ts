@@ -60,7 +60,8 @@ export function useScrollEffects(scope: RefObject<HTMLElement>, pageKey: string,
       // 3) 카드 안 시각 요소: 스크롤에 따라 위로 살짝 더 이동
       const visuals = gsap.utils.toArray<HTMLElement>(
         // 상세 팝업이 붙은 그래프는 팝업과 함께 움직이도록 SVG 대신 감싸는 .chart-hover를 움직임
-        '.card svg[role="img"]:not(.chart-hover svg), .card .chart-hover, .card .donut, .card .stack-bar, .card--hero > *',
+        // 도넛·구성 막대는 바로 옆·아래 범례와 줄이 맞아야 하므로 제외 (따로 움직이면 어긋나 보임)
+        '.card svg[role="img"]:not(.chart-hover svg), .card .chart-hover, .card--hero > *',
         root,
       )
       visuals.forEach((el) => {
@@ -105,7 +106,15 @@ export function useScrollEffects(scope: RefObject<HTMLElement>, pageKey: string,
           // 도넛: 12시 방향부터 시계 방향으로 채워짐 (.donut__ring의 --p 0 → 1)
           case 'donut': {
             const ring = el.querySelector('.donut__ring')
-            if (ring) gsap.fromTo(ring, { '--p': 0 }, { '--p': 1, duration: 1.4, ease: 'power2.out', scrollTrigger })
+            if (ring) {
+              // 그리는 동안만 트랙·마스크 사용 (끝나면 떼어 배경과 어긋나 보이지 않게)
+              el.classList.add('is-revealing')
+              gsap.fromTo(
+                ring,
+                { '--p': 0 },
+                { '--p': 1, duration: 1.4, ease: 'power2.out', scrollTrigger, onComplete: () => el.classList.remove('is-revealing') },
+              )
+            }
             break
           }
           // 선 그래프: 클립 사각형 폭을 늘려 왼쪽 → 오른쪽으로 그려짐

@@ -4,15 +4,14 @@ import { PageTransition } from '../../animation/PageTransition'
 import { SmoothScroll } from '../../animation/SmoothScroll'
 import { useIsMobile } from '../../hooks/useMediaQuery'
 import { NAV_ITEMS, findNavItem } from '../../navigation'
-import { Button, Icon, IconButton, Logo } from '../ui'
+import { Icon, Logo } from '../ui'
 import { MyMenu } from './MyMenu'
-import { QuickInputProvider, useQuickInput } from './QuickInput'
 import { SoloNotice } from './SoloNotice'
 import './layout.css'
 
 export function AppLayout() {
   const isMobile = useIsMobile()
-  return <QuickInputProvider>{isMobile ? <MobileShell /> : <PcShell />}</QuickInputProvider>
+  return isMobile ? <MobileShell /> : <PcShell />
 }
 
 /**
@@ -35,7 +34,6 @@ function useHeaderHeight() {
 
 /* ───────── PC: 상단 메뉴 ───────── */
 function PcShell() {
-  const { open } = useQuickInput()
   const headerRef = useHeaderHeight()
   return (
     <>
@@ -52,10 +50,6 @@ function PcShell() {
             ))}
           </nav>
           <div className="pc-header__actions">
-            <Button size="header" icon="plus" onClick={open}>
-              입력
-            </Button>
-            <IconButton icon="bell" label="알림" />
             <MyMenu />
           </div>
         </div>
@@ -73,15 +67,12 @@ function PcShell() {
 /* ───────── 모바일: 상단 제목 + 하단 탭 ───────── */
 function MobileShell() {
   const { pathname } = useLocation()
-  const { open } = useQuickInput()
   const headerRef = useHeaderHeight()
   const current = findNavItem(pathname)
   return (
     <>
       <header className="m-header" ref={headerRef}>
         <h1 className="m-header__title">{current?.mTitle ?? '가치성장'}</h1>
-        <IconButton icon="plus" label="빠른 입력" variant="primary" onClick={open} />
-        <IconButton icon="bell" label="알림" />
         <MyMenu mobile />
       </header>
       <SmoothScroll>
