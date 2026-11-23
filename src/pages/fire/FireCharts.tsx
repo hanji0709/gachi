@@ -123,7 +123,7 @@ export function NetWorthChart({ series, width, height }: { series: NwPoint[]; wi
 }
 
 /* ───────── 미래 자산 차트 ───────── */
-export type ForecastView = '투자 가능 자산' | '순자산'
+export type ForecastView = '금융투자자산' | '순자산'
 export type ForecastBasis = '명목' | '실질'
 
 interface ForecastProps {
@@ -135,6 +135,14 @@ interface ForecastProps {
   reach: number | null
   width: number
   height: number
+}
+
+/** Y축 라벨: 60억 · 2.5억 · 5,000만 (불필요한 소수점 제거) */
+function axisLabel(n: number): string {
+  const abs = Math.abs(n)
+  const sign = n < 0 ? '−' : ''
+  if (abs >= EOK) return `${sign}${Number((abs / EOK).toFixed(2)).toLocaleString('ko-KR')}억`
+  return formatShort(n)
 }
 
 function niceStep(max: number, ticks: number): number {
@@ -149,9 +157,8 @@ export function ForecastChart({ base, low, high, view, basis, reach, width, heig
   const m = width < 600
   const val = (p: YearPoint) => (view === '순자산' ? p.net : p.inv) * (basis === '실질' ? p.deflator : 1)
   const tgt = (p: YearPoint) => p.target * (basis === '실질' ? p.deflator : 1)
-  const showTarget = view === '투자 가능 자산'
-  const left = m ? 40 : 56
-  const right = width - (m ? 10 : 20)
+  const showTarget = view === '금융투자자산'
+  const right = width - (m ? 18 : 24)
   const top = 12
   const bottom = height - 30
   const all = [...base, ...low, ...high].map(val).concat(showTarget ? base.map(tgt) : [])
@@ -164,6 +171,9 @@ export function ForecastChart({ base, low, high, view, basis, reach, width, heig
   const x = (i: number) => left + (base.length > 1 ? (i / (base.length - 1)) * (right - left) : 0)
   const ticks: number[] = []
   for (let v = lo; v <= hi + 1; v += step) ticks.push(v)
+  // Y축 라벨 길이에 맞춰 왼쪽 여백을 잡아 글자가 잘리지 않게
+  const labelW = Math.max(...ticks.map((v) => axisLabel(v).length)) * 7
+  const left = Math.max(m ? 36 : 56, labelW + 12)
   const pts = (arr: YearPoint[], f: (p: YearPoint) => number) => arr.map((p, i) => `${x(i).toFixed(1)},${y(f(p)).toFixed(1)}`)
   const band = `M${pts(high, val).join(' L')} L${pts(low, val).reverse().join(' L')} Z`
   const yearEvery = Math.ceil((base.length - 1) / (m ? 4 : 6)) || 1
@@ -214,7 +224,7 @@ export function ForecastChart({ base, low, high, view, basis, reach, width, heig
         <g key={v}>
           <line x1={left} x2={right} y1={y(v)} y2={y(v)} style={{ stroke: v === 0 ? 'var(--line-strong)' : 'var(--line)' }} />
           <text x={left - 6} y={y(v) + 4} textAnchor="end" fontSize={11} style={{ fill: 'var(--text-sub)' }}>
-            {formatShort(v)}
+            {axisLabel(v)}
           </text>
         </g>
       ))}
