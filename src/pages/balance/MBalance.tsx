@@ -82,7 +82,7 @@ export function MBalance({ view }: { view: BalanceView }) {
 
       {/* 부채 구성 */}
       <Card pad="md">
-        <CardHeader variant="m" title="부채 구성" right={<span className="caption">{view.short(sheet.totalDebt)}</span>} />
+        <CardHeader variant="m" title="부채 구성" right={<span className="caption">{view.short(sheet.debtShown)}</span>} />
         <StackBar animate={BAR_FILL_DURATION} segments={sheet.debtByCategory.map((c) => ({ value: c.value, color: DEBT_COLORS[c.label] }))} height={12} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '14px 0 6px', gap: 8 }}>
           <InfoChip>평균 금리 {formatPct(sheet.weightedRate / 100)}</InfoChip>

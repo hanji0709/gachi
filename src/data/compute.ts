@@ -96,8 +96,11 @@ export interface BalanceSheet {
   totalDebt: number
   netWorth: number
   assetByCategory: Composition[]
+  /** 부채 구성 (전세금 제외 시 전세보증금 빠짐) */
   debtByCategory: Composition[]
-  /** 부채 가중평균이자율 (잔액 가중) */
+  /** 부채 구성 합계 (전세금 제외 시 전세보증금 빠짐). 총부채와 다를 수 있음 */
+  debtShown: number
+  /** 부채 가중평균이자율 (잔액 가중, 전세금 제외 시 전세보증금 빠짐) */
   weightedRate: number
   /** 부채비율 = 총부채 ÷ 총자산 */
   debtRatio: number
@@ -109,7 +112,7 @@ export interface BalanceSheet {
 export interface SheetOptions {
   /** 포함할 소유자 */
   owners: Set<AccountOwner>
-  /** 전세보증금을 부채에서 뺄지 */
+  /** 전세보증금을 부채 구성·가중평균이자율에서 뺄지 (총부채·순자산은 그대로) */
   excludeJeonse?: boolean
 }
 
@@ -118,10 +121,12 @@ const balanceOf = (a: Account, balances: Map<string, number>) => balances.get(a.
 export function computeSheet(accounts: Account[], balances: Map<string, number>, opt: SheetOptions): BalanceSheet {
   const included = accounts.filter((a) => opt.owners.has(a.owner))
   const assets = included.filter((a) => a.kind === 'asset')
-  const debts = included.filter((a) => a.kind === 'liability' && !(opt.excludeJeonse && a.category === '전세보증금'))
+  const allDebts = included.filter((a) => a.kind === 'liability')
+  // 부채 구성·가중평균이자율용: 전세금 제외 시 전세보증금을 뺌
+  const debts = allDebts.filter((a) => !(opt.excludeJeonse && a.category === '전세보증금'))
   const sum = (list: Account[]) => list.reduce((s, a) => s + balanceOf(a, balances), 0)
   const totalAssets = sum(assets)
-  const totalDebt = sum(debts)
+  const totalDebt = sum(allDebts)
 
   const byCat = (list: Account[], cats: readonly string[]) =>
     cats.map((label) => ({ label, value: sum(list.filter((a) => a.category === label)) }))
@@ -132,7 +137,6 @@ export function computeSheet(accounts: Account[], balances: Map<string, number>,
 
   const byOwner: Record<AccountOwner, number> = { joint: 0, husband: 0, wife: 0 }
   for (const a of included) {
-    if (a.kind === 'liability' && opt.excludeJeonse && a.category === '전세보증금') continue
     byOwner[a.owner] += (a.kind === 'asset' ? 1 : -1) * balanceOf(a, balances)
   }
 
@@ -142,6 +146,7 @@ export function computeSheet(accounts: Account[], balances: Map<string, number>,
     netWorth: totalAssets - totalDebt,
     assetByCategory: byCat(assets, ASSET_CATEGORIES),
     debtByCategory: byCat(debts, LIABILITY_CATEGORIES),
+    debtShown: sum(debts),
     weightedRate,
     debtRatio: totalAssets > 0 ? totalDebt / totalAssets : NaN,
     liquid: sum(assets.filter((a) => a.category === '예적금')),

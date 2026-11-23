@@ -119,7 +119,7 @@ export function PcBalance({ view }: { view: BalanceView }) {
             items={sheet.debtByCategory.map((c) => ({
               label: c.label,
               color: DEBT_COLORS[c.label],
-              pct: formatPct(debtTotal > 0 ? c.value / debtTotal : 0, 1),
+              pct: formatPct(sheet.debtShown > 0 ? c.value / sheet.debtShown : 0, 1),
               amount: view.moneyText(c.value),
             }))}
           />
@@ -140,7 +140,7 @@ export function PcBalance({ view }: { view: BalanceView }) {
             <div style={{ fontSize: 28, fontWeight: 600, margin: '6px 0' }}>{formatPct(sheet.debtRatio)}</div>
             <ProgressBar animate={BAR_FILL_DURATION} pct={Number.isFinite(sheet.debtRatio) ? Math.min(100, sheet.debtRatio * 100) : 0} height={8} />
             <div className="micro" style={{ marginTop: 8 }}>
-              총부채 ÷ 총자산{view.excludeJeonse && ' · 전세금 제외'}
+              총부채 ÷ 총자산
             </div>
           </SubBox>
           <SubBox>
