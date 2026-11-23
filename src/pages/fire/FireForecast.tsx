@@ -20,7 +20,7 @@ export function reachLabel(y: number | null, startYear: number, years: number): 
 function ForecastToggles({ f, m }: { f: Forecast; m?: boolean }) {
   return (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-      <Segmented label="보기" size="sm" options={['투자 가능 자산', '순자산']} value={f.view} onChange={(v) => f.setView(v as ForecastView)} block={m} />
+      <Segmented label="보기" size="sm" options={['금융투자자산', '순자산']} value={f.view} onChange={(v) => f.setView(v as ForecastView)} block={m} />
       <Segmented label="금액 기준" size="sm" options={['명목', '실질']} value={f.basis} onChange={(v) => f.setBasis(v as ForecastBasis)} block={m} />
     </div>
   )
@@ -38,7 +38,7 @@ function ForecastLegend({ view }: { view: ForecastView }) {
         <span style={{ display: 'inline-block', width: 12, height: 10, background: 'var(--violet-700)', opacity: 0.15, marginRight: 6 }} />
         보수 ~ 낙관 범위
       </span>
-      {view === '투자 가능 자산' && (
+      {view === '금융투자자산' && (
         <span>
           <span style={{ ...line, height: 0, borderTop: '2px dashed var(--warn-fill)' }} />
           목표 자산(물가 반영)

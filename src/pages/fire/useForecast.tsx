@@ -63,7 +63,7 @@ export function useForecast(data: FireData) {
   const [draft, setDraft] = useState<Draft>(initial)
   const [preset, setPreset] = useState<PresetName | null>('기본')
   const [applied, setApplied] = useState<Assumptions>(() => parseDraft(initial)!)
-  const [view, setView] = useState<ForecastView>('투자 가능 자산')
+  const [view, setView] = useState<ForecastView>('금융투자자산')
   const [basis, setBasis] = useState<ForecastBasis>('명목')
 
   const parsed = parseDraft(draft)
